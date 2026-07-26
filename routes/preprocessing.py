@@ -7,7 +7,7 @@ import plotly.express as px
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
 
 from config import Config
-from ml.preprocessor import WastewaterPreprocessor
+from ml.preprocessor import FatalConversionError, WastewaterPreprocessor
 from utils.helpers import (
     MODEL_FEATURES,
     REQUIRED_TARGET,
@@ -44,6 +44,9 @@ def _initial_state():
         "cleaning_removed_count": 0,
         "cleaning_message": None,
         "type_conversion_errors": [],
+        "conversion_report": {},
+        "has_fatal_conversion_errors": False,
+        "pipeline_blocked": False,
         "missing_checked": False,
         "missing_stats": {},
         "missing_handled": False,
@@ -102,9 +105,29 @@ def get_or_init_state():
 
 def _engineer_from_sanitized_source(state):
     raw = pd.read_csv(get_dataset_path())
-    engineered, cleaning = WastewaterPreprocessor().clean_and_engineer(raw)
+    try:
+        engineered, cleaning = WastewaterPreprocessor().clean_and_engineer(raw)
+    except FatalConversionError as error:
+        state.update(
+            {
+                "cleaning_applied": False,
+                "feature_engineering_applied": False,
+                "scaler_applied": False,
+                "split": False,
+                "conversion_report": error.report,
+                "type_conversion_errors": error.report.get("warnings", []),
+                "has_fatal_conversion_errors": True,
+                "pipeline_blocked": True,
+                "cleaning_message": str(error),
+            }
+        )
+        _write_conversion_report(error.report)
+        save_state(state)
+        raise
     active_path, _ = get_preprocessing_paths()
     engineered.to_csv(active_path, index=False)
+    conversion_report = cleaning["conversion_report"]
+    _write_conversion_report(conversion_report)
 
     state.update(
         {
@@ -119,6 +142,9 @@ def _engineer_from_sanitized_source(state):
                 "duplikat dihapus, lalu lag dan fitur turunan dibuat."
             ),
             "type_conversion_errors": cleaning["type_conversion_warnings"],
+            "conversion_report": conversion_report,
+            "has_fatal_conversion_errors": False,
+            "pipeline_blocked": False,
             "duplicates_checked": True,
             "duplicates_count": cleaning["duplicate_rows_removed"],
             "duplicates_handled": True,
@@ -137,6 +163,27 @@ def _engineer_from_sanitized_source(state):
         }
     )
     return engineered, cleaning
+
+
+def _write_conversion_report(report):
+    """Persist row-level conversion diagnostics for CSV/JSON report exports."""
+    output_dir = os.path.join(Config.UPLOAD_FOLDER, "output", "preprocessing")
+    os.makedirs(output_dir, exist_ok=True)
+    details = report.get("details", [])
+    columns = [
+        "column",
+        "row_index",
+        "timestamp",
+        "original_value",
+        "root_cause",
+        "action",
+        "final_status",
+    ]
+    pd.DataFrame(details, columns=columns).to_csv(
+        os.path.join(output_dir, "conversion_report.csv"), index=False
+    )
+    with open(os.path.join(output_dir, "conversion_report.json"), "w", encoding="utf-8") as handle:
+        json.dump(report, handle, indent=2, ensure_ascii=False)
 
 
 @preprocessing_bp.route("/")
@@ -350,7 +397,12 @@ def step6_scale_split():
 @preprocessing_bp.route("/download/<file_type>")
 def download(file_type):
     output_dir = os.path.join(Config.UPLOAD_FOLDER, "output", "preprocessing")
-    filenames = {"csv": "dataset_preprocessing.csv", "xlsx": "dataset_preprocessing.xlsx"}
+    filenames = {
+        "csv": "dataset_preprocessing.csv",
+        "xlsx": "dataset_preprocessing.xlsx",
+        "conversion_csv": "conversion_report.csv",
+        "conversion_json": "conversion_report.json",
+    }
     filename = filenames.get(file_type)
     if not filename or not os.path.exists(os.path.join(output_dir, filename)):
         flash("Berkas ekspor belum tersedia.", "danger")

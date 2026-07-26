@@ -256,3 +256,64 @@ KeyError: 'opt_train'
 2026-07-26 21:08:36,608 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
 2026-07-26 21:14:31,689 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
 2026-07-26 21:14:33,690 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 22:36:16,760 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
+2026-07-26 22:39:55,670 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-26 22:42:07,404 - coagulant_app - INFO - Active dataset and generated artifacts deleted.
+2026-07-26 22:42:19,334 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5700, 'excluded_alum_lime_row_count': 190, 'ambiguous_chemical_row_count': 315, 'final_active_row_count': 5195, 'removed_column_names': ['Unnamed: 0', 'Dosis Alum (ppm)', 'Dosis Lime (ppm)']}
+2026-07-26 22:43:05,332 - coagulant_app - INFO - Active dataset and generated artifacts deleted.
+2026-07-26 22:43:14,340 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5700, 'excluded_alum_lime_row_count': 190, 'ambiguous_chemical_row_count': 315, 'final_active_row_count': 5195, 'removed_column_names': ['Unnamed: 0', 'Dosis Alum (ppm)', 'Dosis Lime (ppm)']}
+2026-07-26 22:46:40,762 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
+2026-07-26 22:49:12,160 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
+2026-07-26 22:49:38,800 - coagulant_app - ERROR - Error pada grafik distribusi: ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+2026-07-26 22:51:26,444 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
+2026-07-26 23:06:09,207 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
+2026-07-26 23:06:09,818 - coagulant_app - ERROR - Error pada grafik distribusi: ufunc 'isfinite' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+2026-07-26 23:06:23,496 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs + 1 Excel) successfully generated and saved.
+2026-07-26 23:09:11,735 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:09:24,870 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:10:20,609 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:10:35,154 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:10:52,613 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:11:15,670 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:11:35,888 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:11:46,116 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:13:11,098 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:14:11,814 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:14:21,719 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:14:42,412 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:15:44,317 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:15:45,617 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-26 23:16:01,506 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:16:23,456 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:16:24,760 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-26 23:17:06,622 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:19:04,509 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:19:06,344 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:19:12,906 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:19:34,423 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:19:36,797 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:19:48,228 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:19:49,795 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:19:52,725 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:20:00,911 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:20:02,722 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:21:11,617 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:21:13,551 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:21:22,141 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:21:24,436 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:21:32,575 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:21:34,927 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:23:22,404 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:23:24,214 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:24:04,577 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:24:05,893 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-26 23:26:06,442 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:26:17,057 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:26:19,305 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:26:30,211 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.

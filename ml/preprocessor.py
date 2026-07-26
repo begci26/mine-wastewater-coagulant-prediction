@@ -1,4 +1,5 @@
 import os
+import re
 
 import joblib
 import numpy as np
@@ -17,6 +18,89 @@ from utils.helpers import (
     REQUIRED_TARGET,
     forbidden_chemical_columns,
 )
+
+NULL_MARKERS = {"", "-", "na", "n/a", "null", "none", "nan"}
+
+
+class FatalConversionError(ValueError):
+    """Raised when a required numeric column has no usable observations."""
+
+    def __init__(self, message, report):
+        super().__init__(message)
+        self.report = report
+
+
+def _conversion_location(df, index):
+    date = df.at[index, "Date"] if "Date" in df.columns else None
+    time = df.at[index, "Time"] if "Time" in df.columns else None
+    timestamp = " ".join(
+        str(value).strip()
+        for value in (date, time)
+        if value is not None and not pd.isna(value)
+    )
+    try:
+        row_index = int(index)
+    except (TypeError, ValueError):
+        row_index = str(index)
+    return row_index, timestamp or None
+
+
+def normalize_numeric_value(value):
+    """Parse one numeric value without confusing decimal and grouping separators."""
+    if pd.isna(value):
+        return np.nan, "missing", "Nilai kosong", "Dipertahankan sebagai missing"
+    if isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, bool):
+        number = float(value)
+        if np.isfinite(number):
+            return number, "success", "Numerik valid", "Dikonversi langsung"
+        return np.nan, "invalid", "Nilai tak hingga", "Dikonversi menjadi missing"
+
+    original = str(value)
+    text = original.replace("\u00a0", " ").strip()
+    if text.casefold() in NULL_MARKERS:
+        return np.nan, "missing", "Penanda null dikenal", "Dikonversi menjadi missing"
+
+    compact = text
+    normalized = compact != original
+
+    # Spaces are removed only when they form conventional three-digit groups.
+    if " " in compact:
+        if re.fullmatch(r"[+-]?\d{1,3}(?: \d{3})+(?:[.,]\d+)?", compact):
+            compact = compact.replace(" ", "")
+            normalized = True
+        else:
+            return np.nan, "invalid", "Spasi bukan pemisah ribuan yang valid", "Dikonversi menjadi missing"
+
+    if "," in compact and "." in compact:
+        if re.fullmatch(r"[+-]?\d{1,3}(?:\.\d{3})+,\d+", compact):
+            compact = compact.replace(".", "").replace(",", ".")
+            normalized = True
+        elif re.fullmatch(r"[+-]?\d{1,3}(?:,\d{3})+\.\d+", compact):
+            compact = compact.replace(",", "")
+            normalized = True
+        else:
+            return np.nan, "invalid", "Format pemisah desimal/ribuan tidak konsisten", "Dikonversi menjadi missing"
+    elif "," in compact:
+        if re.fullmatch(r"[+-]?\d+,\d{1,2}", compact):
+            compact = compact.replace(",", ".")
+            normalized = True
+        elif re.fullmatch(r"[+-]?\d{1,3}(?:,\d{3})+", compact):
+            compact = compact.replace(",", "")
+            normalized = True
+        else:
+            return np.nan, "invalid", "Pemisah koma ambigu atau tidak valid", "Dikonversi menjadi missing"
+    elif compact.count(".") > 1:
+        return np.nan, "invalid", "Terdapat lebih dari satu titik desimal", "Dikonversi menjadi missing"
+
+    try:
+        number = float(compact)
+    except (TypeError, ValueError):
+        return np.nan, "invalid", "Kontaminasi teks/non-numerik", "Dikonversi menjadi missing"
+    if not np.isfinite(number):
+        return np.nan, "invalid", "Nilai tak hingga", "Dikonversi menjadi missing"
+    if normalized:
+        return number, "normalized", "Format lokal/whitespace", "Dinormalisasi lalu dikonversi"
+    return number, "success", "Numerik valid", "Dikonversi langsung"
 
 
 class IQRWinsorizer(BaseEstimator, TransformerMixin):
@@ -133,16 +217,59 @@ class WastewaterPreprocessor:
 
     def convert_types(self, df):
         clean = df.copy()
-        errors = []
+        details = []
+        column_summary = {}
+        warnings = []
+        fatal_errors = []
         for column in BASE_INPUT_FEATURES + [REQUIRED_TARGET]:
             if column in clean.columns:
-                original_non_null = clean[column].notna()
-                converted = pd.to_numeric(clean[column], errors="coerce")
-                newly_invalid = int((original_non_null & converted.isna()).sum())
-                if newly_invalid:
-                    errors.append(f"{column}: {newly_invalid} nilai tidak dapat dikonversi")
-                clean[column] = converted.astype(float)
-        return clean, errors
+                counts = {"success": 0, "normalized": 0, "missing": 0, "invalid": 0}
+                converted_values = []
+                for index, original in clean[column].items():
+                    converted, category, root_cause, action = normalize_numeric_value(original)
+                    counts[category] += 1
+                    converted_values.append(converted)
+                    if category != "success":
+                        row_index, timestamp = _conversion_location(df, index)
+                        is_target = column == REQUIRED_TARGET
+                        if category == "normalized":
+                            final_status = "berhasil_dinormalisasi"
+                        elif is_target:
+                            action = f"{action}; baris dikeluarkan karena target tidak valid"
+                            final_status = "dikeluarkan_invalid"
+                        else:
+                            action = f"{action}; akan diimputasi dengan median training"
+                            final_status = "missing_akan_diimputasi"
+                        details.append(
+                            {
+                                "column": column,
+                                "row_index": row_index,
+                                "timestamp": timestamp,
+                                "original_value": None if pd.isna(original) else str(original),
+                                "root_cause": root_cause,
+                                "action": action,
+                                "final_status": final_status,
+                            }
+                        )
+                clean[column] = pd.Series(converted_values, index=clean.index, dtype=float)
+                usable = int(clean[column].notna().sum())
+                column_summary[column] = {**counts, "usable": usable, "total": int(len(clean))}
+                if counts["normalized"] or counts["missing"] or counts["invalid"]:
+                    warnings.append(
+                        f"{column}: {counts['normalized']} dinormalisasi, "
+                        f"{counts['missing'] + counts['invalid']} menjadi missing/ditangani"
+                    )
+                if usable == 0:
+                    fatal_errors.append(f"{column}: tidak memiliki nilai numerik yang dapat digunakan")
+
+        report = {
+            "column_summary": column_summary,
+            "details": details,
+            "warnings": warnings,
+            "fatal_errors": fatal_errors,
+            "has_fatal_errors": bool(fatal_errors),
+        }
+        return clean, report
 
     @staticmethod
     def build_timestamp(df):
@@ -160,7 +287,12 @@ class WastewaterPreprocessor:
         if missing:
             raise ValueError(f"Kolom wajib tidak ditemukan: {', '.join(missing)}")
 
-        clean, conversion_errors = self.convert_types(df)
+        clean, conversion_report = self.convert_types(df)
+        if conversion_report["has_fatal_errors"]:
+            raise FatalConversionError(
+                "Konversi numerik fatal: " + "; ".join(conversion_report["fatal_errors"]),
+                conversion_report,
+            )
         initial_rows = len(clean)
         target_missing_or_invalid = clean[REQUIRED_TARGET].isna()
         target_nonpositive = clean[REQUIRED_TARGET].notna() & (clean[REQUIRED_TARGET] <= 0)
@@ -207,7 +339,9 @@ class WastewaterPreprocessor:
             "duplicate_rows_removed": int(duplicate_rows),
             "lag_incomplete_rows_removed": lag_incomplete_rows,
             "final_row_count": int(len(clean)),
-            "type_conversion_warnings": conversion_errors,
+            "type_conversion_warnings": conversion_report["warnings"],
+            "conversion_report": conversion_report,
+            "has_fatal_conversion_errors": False,
         }
         return clean, summary
 

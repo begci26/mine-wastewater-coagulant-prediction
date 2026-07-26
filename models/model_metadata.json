@@ -1,0 +1,493 @@
+{
+  "artifact_schema_version": 2,
+  "target": "Dosis CL-80 (ppm)",
+  "feature_names": [
+    "Inlet TSS (mg/L)",
+    "Inlet pH",
+    "Outlet TSS (mg/L)",
+    "Outlet pH",
+    "Inlet Disch (m3/s)",
+    "Kolom T1",
+    "Kolom T2",
+    "Kolom T3",
+    "Efisiensi_TSS",
+    "Delta_pH",
+    "Beban_TSS"
+  ],
+  "feature_count": 11,
+  "best_model": "XGBoost",
+  "selection_criterion": "lowest test RMSE; tie-break by lowest test MAE, then highest test R2",
+  "best_metrics": {
+    "mae": 0.29049244770470256,
+    "rmse": 0.43766720437441314,
+    "r2": 0.8854423314569766,
+    "cv_mean": 0.6264584057378014,
+    "cv_std": 0.06950525803508094
+  },
+  "training_date": "2026-07-26T23:16:52",
+  "rows_count": 2531,
+  "cols_count": 11,
+  "duration_seconds": 2.4768710136413574,
+  "split": {
+    "total_final_observations": 2531,
+    "training_observations": 2024,
+    "testing_observations": 507,
+    "training_date_range": [
+      "2025-06-01T03:00:00",
+      "2026-03-17T17:00:00"
+    ],
+    "testing_date_range": [
+      "2026-03-17T18:00:00",
+      "2026-04-24T18:00:00"
+    ],
+    "split_ratio": "0.7997:0.2003",
+    "split_method": "chronological_80_20",
+    "final_feature_names": [
+      "Inlet TSS (mg/L)",
+      "Inlet pH",
+      "Outlet TSS (mg/L)",
+      "Outlet pH",
+      "Inlet Disch (m3/s)",
+      "Kolom T1",
+      "Kolom T2",
+      "Kolom T3",
+      "Efisiensi_TSS",
+      "Delta_pH",
+      "Beban_TSS"
+    ],
+    "feature_count": 11,
+    "artifact_schema_version": 2,
+    "preprocessing": {
+      "feature_names": [
+        "Inlet TSS (mg/L)",
+        "Inlet pH",
+        "Outlet TSS (mg/L)",
+        "Outlet pH",
+        "Inlet Disch (m3/s)",
+        "Kolom T1",
+        "Kolom T2",
+        "Kolom T3",
+        "Efisiensi_TSS",
+        "Delta_pH",
+        "Beban_TSS"
+      ],
+      "medians": {
+        "Inlet TSS (mg/L)": 559.0,
+        "Inlet pH": 7.72,
+        "Outlet TSS (mg/L)": 131.0,
+        "Outlet pH": 7.74,
+        "Inlet Disch (m3/s)": 2.05,
+        "Kolom T1": 2.1450021450021453,
+        "Kolom T2": 2.1450021450021453,
+        "Kolom T3": 2.1450021450021453,
+        "Efisiensi_TSS": 75.80983656701517,
+        "Delta_pH": 0.0,
+        "Beban_TSS": 1179.8845000000001
+      },
+      "iqr_bounds": {
+        "Inlet TSS (mg/L)": {
+          "q1": 394.75,
+          "q3": 757.5,
+          "iqr": 362.75,
+          "lower_bound": -149.375,
+          "upper_bound": 1301.625
+        },
+        "Inlet pH": {
+          "q1": 7.57,
+          "q3": 7.9,
+          "iqr": 0.33000000000000007,
+          "lower_bound": 7.075,
+          "upper_bound": 8.395
+        },
+        "Outlet TSS (mg/L)": {
+          "q1": 99.0,
+          "q3": 163.0,
+          "iqr": 64.0,
+          "lower_bound": 3.0,
+          "upper_bound": 259.0
+        },
+        "Outlet pH": {
+          "q1": 7.51,
+          "q3": 7.95,
+          "iqr": 0.4400000000000004,
+          "lower_bound": 6.85,
+          "upper_bound": 8.610000000000001
+        },
+        "Inlet Disch (m3/s)": {
+          "q1": 1.852,
+          "q3": 2.289,
+          "iqr": 0.43700000000000006,
+          "lower_bound": 1.1965,
+          "upper_bound": 2.9445
+        },
+        "Kolom T1": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837
+        },
+        "Kolom T2": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837
+        },
+        "Kolom T3": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837
+        },
+        "Efisiensi_TSS": {
+          "q1": 66.22768670309654,
+          "q3": 84.49839510658916,
+          "iqr": 18.27070840349262,
+          "lower_bound": 38.82162409785761,
+          "upper_bound": 111.90445771182809
+        },
+        "Delta_pH": {
+          "q1": -0.13999999999999968,
+          "q3": 0.11000000000000032,
+          "iqr": 0.25,
+          "lower_bound": -0.5149999999999997,
+          "upper_bound": 0.4850000000000003
+        },
+        "Beban_TSS": {
+          "q1": 718.13875,
+          "q3": 1758.3540000000003,
+          "iqr": 1040.2152500000002,
+          "lower_bound": -842.1841250000003,
+          "upper_bound": 3318.6768750000006
+        }
+      },
+      "scaler_mean": {
+        "Inlet TSS (mg/L)": 624.4191576086956,
+        "Inlet pH": 7.735171541501976,
+        "Outlet TSS (mg/L)": 132.58646245059288,
+        "Outlet pH": 7.7100335968379445,
+        "Inlet Disch (m3/s)": 2.0599910573122533,
+        "Kolom T1": 2.4767948507281012,
+        "Kolom T2": 2.4776882171595207,
+        "Kolom T3": 2.4785870512163424,
+        "Efisiensi_TSS": 74.67037822719443,
+        "Delta_pH": -0.021588043478260852,
+        "Beban_TSS": 1349.5659418354744
+      },
+      "scaler_scale": {
+        "Inlet TSS (mg/L)": 279.13149797245245,
+        "Inlet pH": 0.24267312010549177,
+        "Outlet TSS (mg/L)": 46.42567516750264,
+        "Outlet pH": 0.34459869519335096,
+        "Inlet Disch (m3/s)": 0.38484533874919796,
+        "Kolom T1": 1.405172950360635,
+        "Kolom T2": 1.4045654545025708,
+        "Kolom T3": 1.4039498591628767,
+        "Efisiensi_TSS": 12.8410252415712,
+        "Delta_pH": 0.21569082935743764,
+        "Beban_TSS": 779.6968429782128
+      },
+      "fit_scope": "training_period_only"
+    }
+  },
+  "validation_method": "Time Series Cross-Validation with 5 splits",
+  "cv_n_splits": 5,
+  "parameter_policy": "fixed model parameter configuration",
+  "randomized_search_cv_used": false,
+  "loco_method": "LOCO-based reference-value perturbation",
+  "loco_causal_interpretation": false,
+  "lag_definition": "previous observations (sampling interval not assumed hourly)",
+  "residual_statistics": {
+    "definition": "actual - prediction",
+    "mean": 0.1444327448933661,
+    "std": 0.4131485979493119,
+    "min": -1.613977970045349,
+    "max": 2.679176537456345
+  },
+  "model_details": {
+    "Linear Regression": {
+      "train": {
+        "mae": 0.2906329293040826,
+        "rmse": 0.4928198405151234,
+        "r2": 0.8786581558485905
+      },
+      "test": {
+        "mae": 0.2840035994936502,
+        "rmse": 0.4661671199540255,
+        "r2": 0.8700370882050762
+      },
+      "r2_gap": 0.008621067643514335,
+      "rmse_gap": -0.02665272056109791,
+      "rmse_ratio": 0.9459179230015599,
+      "cv": {
+        "rmse_mean": 0.6577730506626,
+        "rmse_std": 0.15385127815505806,
+        "mae_mean": 0.4472061420688517,
+        "r2_mean": 0.6811806703759575,
+        "n_splits": 5,
+        "validation_method": "Time Series Cross-Validation with 5 splits",
+        "fold_metrics": [
+          {
+            "mae": 0.65837883556729,
+            "rmse": 0.8352480707987828,
+            "r2": 0.3277344734980445
+          },
+          {
+            "mae": 0.49901874303801763,
+            "rmse": 0.8490260465605819,
+            "r2": 0.46766359213419173
+          },
+          {
+            "mae": 0.4005281659798628,
+            "rmse": 0.5756737831453627,
+            "r2": 0.8420599411749938
+          },
+          {
+            "mae": 0.33564314779915627,
+            "rmse": 0.47940387450499294,
+            "r2": 0.8870252234768015
+          },
+          {
+            "mae": 0.34246181795993197,
+            "rmse": 0.5495134783032798,
+            "r2": 0.8814201215957562
+          }
+        ],
+        "fold_ranges": [
+          {
+            "fold": 1,
+            "train_start_index": 0,
+            "train_end_index": 338,
+            "validation_start_index": 339,
+            "validation_end_index": 675
+          },
+          {
+            "fold": 2,
+            "train_start_index": 0,
+            "train_end_index": 675,
+            "validation_start_index": 676,
+            "validation_end_index": 1012
+          },
+          {
+            "fold": 3,
+            "train_start_index": 0,
+            "train_end_index": 1012,
+            "validation_start_index": 1013,
+            "validation_end_index": 1349
+          },
+          {
+            "fold": 4,
+            "train_start_index": 0,
+            "train_end_index": 1349,
+            "validation_start_index": 1350,
+            "validation_end_index": 1686
+          },
+          {
+            "fold": 5,
+            "train_start_index": 0,
+            "train_end_index": 1686,
+            "validation_start_index": 1687,
+            "validation_end_index": 2023
+          }
+        ]
+      },
+      "duration": 0.014234781265258789,
+      "pred_duration": 0.0005626678466796875,
+      "mae": 0.2840035994936502,
+      "rmse": 0.4661671199540255,
+      "r2": 0.8700370882050762,
+      "cv_mean": 0.6577730506626,
+      "cv_std": 0.15385127815505806
+    },
+    "XGBoost": {
+      "train": {
+        "mae": 0.0652741333382949,
+        "rmse": 0.10535628501145097,
+        "r2": 0.9944543159868049
+      },
+      "test": {
+        "mae": 0.29049244770470256,
+        "rmse": 0.43766720437441314,
+        "r2": 0.8854423314569766
+      },
+      "r2_gap": 0.1090119845298283,
+      "rmse_gap": 0.3323109193629622,
+      "rmse_ratio": 4.154163221746514,
+      "cv": {
+        "rmse_mean": 0.6264584057378014,
+        "rmse_std": 0.06950525803508094,
+        "mae_mean": 0.40680265271419264,
+        "r2_mean": 0.7411602378767782,
+        "n_splits": 5,
+        "validation_method": "Time Series Cross-Validation with 5 splits",
+        "fold_metrics": [
+          {
+            "mae": 0.4757594188417155,
+            "rmse": 0.7006771419999864,
+            "r2": 0.5269078099096937
+          },
+          {
+            "mae": 0.4124626823412299,
+            "rmse": 0.7054796280635927,
+            "r2": 0.6324528185910618
+          },
+          {
+            "mae": 0.42606923994426715,
+            "rmse": 0.6290752073700769,
+            "r2": 0.811398765523744
+          },
+          {
+            "mae": 0.37793400054779797,
+            "rmse": 0.5373582402189137,
+            "r2": 0.8580595304110372
+          },
+          {
+            "mae": 0.3417879218959523,
+            "rmse": 0.5597018110364378,
+            "r2": 0.8769822649483545
+          }
+        ],
+        "fold_ranges": [
+          {
+            "fold": 1,
+            "train_start_index": 0,
+            "train_end_index": 338,
+            "validation_start_index": 339,
+            "validation_end_index": 675
+          },
+          {
+            "fold": 2,
+            "train_start_index": 0,
+            "train_end_index": 675,
+            "validation_start_index": 676,
+            "validation_end_index": 1012
+          },
+          {
+            "fold": 3,
+            "train_start_index": 0,
+            "train_end_index": 1012,
+            "validation_start_index": 1013,
+            "validation_end_index": 1349
+          },
+          {
+            "fold": 4,
+            "train_start_index": 0,
+            "train_end_index": 1349,
+            "validation_start_index": 1350,
+            "validation_end_index": 1686
+          },
+          {
+            "fold": 5,
+            "train_start_index": 0,
+            "train_end_index": 1686,
+            "validation_start_index": 1687,
+            "validation_end_index": 2023
+          }
+        ]
+      },
+      "duration": 0.2655205726623535,
+      "pred_duration": 0.0030755996704101562,
+      "mae": 0.29049244770470256,
+      "rmse": 0.43766720437441314,
+      "r2": 0.8854423314569766,
+      "cv_mean": 0.6264584057378014,
+      "cv_std": 0.06950525803508094
+    },
+    "LightGBM": {
+      "train": {
+        "mae": 0.08814430963992588,
+        "rmse": 0.14464503509586454,
+        "r2": 0.9895469919281478
+      },
+      "test": {
+        "mae": 0.3128301569010287,
+        "rmse": 0.4584664487347601,
+        "r2": 0.8742953699669711
+      },
+      "r2_gap": 0.11525162196117666,
+      "rmse_gap": 0.3138214136388956,
+      "rmse_ratio": 3.1695968577898865,
+      "cv": {
+        "rmse_mean": 0.6361881818454765,
+        "rmse_std": 0.1426562665207968,
+        "mae_mean": 0.43407274683563885,
+        "r2_mean": 0.703162885547432,
+        "n_splits": 5,
+        "validation_method": "Time Series Cross-Validation with 5 splits",
+        "fold_metrics": [
+          {
+            "mae": 0.6247372114591627,
+            "rmse": 0.9169359727254639,
+            "r2": 0.1898080922610762
+          },
+          {
+            "mae": 0.3453342694155779,
+            "rmse": 0.5586054276528505,
+            "r2": 0.7695618157826284
+          },
+          {
+            "mae": 0.4322115931049799,
+            "rmse": 0.6139712653274131,
+            "r2": 0.82034658200486
+          },
+          {
+            "mae": 0.41219010162779823,
+            "rmse": 0.5507610802599928,
+            "r2": 0.8508906428686107
+          },
+          {
+            "mae": 0.3558905585706755,
+            "rmse": 0.5406671632616625,
+            "r2": 0.8852072948199846
+          }
+        ],
+        "fold_ranges": [
+          {
+            "fold": 1,
+            "train_start_index": 0,
+            "train_end_index": 338,
+            "validation_start_index": 339,
+            "validation_end_index": 675
+          },
+          {
+            "fold": 2,
+            "train_start_index": 0,
+            "train_end_index": 675,
+            "validation_start_index": 676,
+            "validation_end_index": 1012
+          },
+          {
+            "fold": 3,
+            "train_start_index": 0,
+            "train_end_index": 1012,
+            "validation_start_index": 1013,
+            "validation_end_index": 1349
+          },
+          {
+            "fold": 4,
+            "train_start_index": 0,
+            "train_end_index": 1349,
+            "validation_start_index": 1350,
+            "validation_end_index": 1686
+          },
+          {
+            "fold": 5,
+            "train_start_index": 0,
+            "train_end_index": 1686,
+            "validation_start_index": 1687,
+            "validation_end_index": 2023
+          }
+        ]
+      },
+      "duration": 0.17798590660095215,
+      "pred_duration": 0.009557008743286133,
+      "mae": 0.3128301569010287,
+      "rmse": 0.4584664487347601,
+      "r2": 0.8742953699669711,
+      "cv_mean": 0.6361881818454765,
+      "cv_std": 0.1426562665207968
+    }
+  }
+}

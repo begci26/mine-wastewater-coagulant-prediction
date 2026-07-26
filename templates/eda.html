@@ -53,8 +53,15 @@
 <div class="row">
     <!-- Judul Halaman -->
     <div class="col-12 mb-3">
-        <h1 class="h3 mb-0 text-gray-800 fw-bold">Eksplorasi Data (EDA)</h1>
-        <p class="text-muted small">Tinjau karakteristik sebaran, korelasi Pearson, multikolinearitas VIF, dan trend time-series untuk BAB IV Tesis.</p>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">Eksplorasi Data (EDA)</h1>
+                <p class="text-muted small">Tinjau karakteristik sebaran, korelasi Pearson, multikolinearitas VIF, dan trend time-series untuk BAB IV Tesis.</p>
+            </div>
+            <a href="{{ url_for('eda.download_bab4', filename='laporan_eda.pdf') }}?v={{ bab4_version }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-file-pdf me-1"></i>Unduh Laporan EDA PDF
+            </a>
+        </div>
     </div>
 
     <!-- TABS NAVIGATION -->
@@ -328,10 +335,10 @@
                         <div class="card shadow-sm border-0 h-100">
                             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                                 <h5 class="m-0 fw-bold text-dark"><i class="fas fa-th text-primary me-2"></i>Heatmap Korelasi Pearson</h5>
-                                <a href="{{ url_for('eda.download_bab4', filename='heatmap.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh PNG</a>
+                                <a href="{{ url_for('eda.download_bab4', filename='heatmap.png') }}?v={{ bab4_version }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh PNG</a>
                             </div>
                             <div class="card-body">
-                                <div id="plotly-heatmap" style="min-height: 400px;"></div>
+                                <div id="plotly-heatmap" class="w-100" style="height: 520px; min-width: 0;"></div>
                             </div>
                         </div>
                     </div>
@@ -374,9 +381,10 @@
                         <div class="card shadow-sm border-0">
                             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                                 <h5 class="m-0 fw-bold text-dark"><i class="fas fa-shield-alt text-primary me-2"></i>Variance Inflation Factor (VIF) & Multikolinearitas</h5>
-                                <a href="{{ url_for('eda.download_bab4', filename='vif.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh VIF Chart</a>
+                                <a href="{{ url_for('eda.download_bab4', filename='vif.png') }}?v={{ bab4_version }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh VIF Chart</a>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="card-body">
+                                <div id="plotly-vif" class="w-100 mb-3" style="height: 420px; min-width: 0;"></div>
                                 <div class="table-responsive">
                                     <table class="table table-hover text-center m-0">
                                         <thead class="table-light">
@@ -390,12 +398,14 @@
                                         </thead>
                                         <tbody>
                                             {% for item in vif_table %}
-                                            <tr class="{% if item.vif > 10.0 %}table-warning{% endif %}">
+                                            <tr class="{% if item.is_high %}table-warning{% endif %}">
                                                 <td class="fw-bold text-start ps-4">{{ item.feature }}</td>
                                                 <td>{{ item.correlation }}</td>
-                                                <td class="fw-bold">{{ item.vif }}</td>
+                                                <td class="fw-bold">{{ item.vif_display }}</td>
                                                 <td>
-                                                    {% if item.vif > 10.0 %}
+                                                    {% if not item.is_available %}
+                                                    <span class="badge bg-secondary">Tidak tersedia</span>
+                                                    {% elif item.is_high %}
                                                     <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i>Multikolinearitas Tinggi</span>
                                                     {% else %}
                                                     <span class="badge bg-success">Aman (VIF <= 10)</span>
@@ -507,8 +517,9 @@
                             <div id="ts-debit" style="min-height: 250px;"></div>
                         </div>
                         <div class="border rounded p-3">
-                            <h6 class="fw-bold text-dark mb-2">5. Ruang Lingkup Kimia Penunjang</h6>
-                            <div id="ts-chem" style="min-height: 250px;"></div>
+                            <h6 class="fw-bold text-dark mb-2">5. Memori Historis Dosis CL-80 (T1, T2, T3)</h6>
+                            <div id="ts-lags" style="min-height: 250px;"></div>
+                            <p class="small text-muted mb-0 mt-2">Alum dan Lime tidak ditampilkan karena sengaja dikeluarkan dari dataset aktif dan ruang lingkup model.</p>
                         </div>
                     </div>
                 </div>
@@ -583,7 +594,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-3.7.0.min.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -613,7 +624,33 @@
                 { extend: 'copy', className: 'btn btn-outline-secondary btn-sm' },
                 { extend: 'csv', className: 'btn btn-outline-primary btn-sm' },
                 { extend: 'excel', className: 'btn btn-outline-success btn-sm' },
-                { extend: 'pdf', className: 'btn btn-outline-danger btn-sm' }
+                {
+                    extend: 'pdfHtml5',
+                    className: 'btn btn-outline-danger btn-sm',
+                    orientation: 'landscape',
+                    pageSize: 'A3',
+                    title: 'Statistik Deskriptif EDA CL-80',
+                    exportOptions: { columns: ':visible' },
+                    customize: function(doc) {
+                        doc.pageMargins = [18, 24, 18, 24];
+                        doc.defaultStyle.fontSize = 6;
+                        doc.styles.tableHeader.fontSize = 7;
+                        const table = doc.content.find(item => item.table);
+                        if (table) {
+                            table.table.headerRows = 1;
+                            table.table.dontBreakRows = true;
+                            table.table.widths = Array(table.table.body[0].length).fill('*');
+                            table.layout = {
+                                hLineWidth: () => 0.3,
+                                vLineWidth: () => 0.3,
+                                hLineColor: () => '#94a3b8',
+                                vLineColor: () => '#94a3b8',
+                                paddingLeft: () => 2,
+                                paddingRight: () => 2
+                            };
+                        }
+                    }
+                }
             ],
             "paging": false,
             "info": false,
@@ -648,29 +685,48 @@
         const featureSelect = document.getElementById('feature-select');
         featureSelect.addEventListener('change', loadDistributionPlot);
 
+        const requestedPane = window.location.hash;
+        if (requestedPane) {
+            const requestedTab = document.querySelector(`[data-bs-target="${requestedPane}"]`);
+            if (requestedTab) {
+                bootstrap.Tab.getOrCreateInstance(requestedTab).show();
+            }
+        }
+
         function loadDistributionPlot() {
             const feat = featureSelect.value;
-            fetch(`{{ url_for('eda.distribution', feature='') }}${feat}`)
-                .then(res => res.json())
+            if (!feat) {
+                showPlotError(['plotly-hist', 'plotly-box', 'plotly-kde', 'plotly-violin'], 'Tidak ada fitur numerik yang tersedia.');
+                return;
+            }
+            const distributionBase = {{ url_for('eda.distribution', feature='__FEATURE__') | tojson }};
+            fetch(distributionBase.replace('__FEATURE__', encodeURIComponent(feat)))
+                .then(parseApiResponse)
                 .then(data => {
                     Plotly.newPlot('plotly-hist', data.histogram.data, data.histogram.layout, {responsive: true});
                     Plotly.newPlot('plotly-box', data.boxplot.data, data.boxplot.layout, {responsive: true});
                     Plotly.newPlot('plotly-kde', data.density.data, data.density.layout, {responsive: true});
                     Plotly.newPlot('plotly-violin', data.violin.data, data.violin.layout, {responsive: true});
-                });
+                    resizePlots(['plotly-hist', 'plotly-box', 'plotly-kde', 'plotly-violin']);
+                })
+                .catch(error => showPlotError(['plotly-hist', 'plotly-box', 'plotly-kde', 'plotly-violin'], error.message));
         }
 
         function loadCorrelationHeatmap() {
             fetch("{{ url_for('eda.correlation_heatmap') }}")
-                .then(res => res.json())
+                .then(parseApiResponse)
                 .then(data => {
-                    Plotly.newPlot('plotly-heatmap', data.data, data.layout, {responsive: true});
-                });
+                    const heatmap = data.heatmap || data;
+                    Plotly.newPlot('plotly-heatmap', heatmap.data, heatmap.layout, {responsive: true});
+                    Plotly.newPlot('plotly-vif', data.vif_chart.data, data.vif_chart.layout, {responsive: true});
+                    resizePlots(['plotly-heatmap', 'plotly-vif']);
+                })
+                .catch(error => showPlotError(['plotly-heatmap', 'plotly-vif'], error.message));
         }
 
         function loadTargetAnalysis() {
             fetch("{{ url_for('eda.target_analysis') }}")
-                .then(res => res.json())
+                .then(parseApiResponse)
                 .then(data => {
                     Plotly.newPlot('target-hist', data.histogram.data, data.histogram.layout, {responsive: true});
                     Plotly.newPlot('target-qq', data.qq.data, data.qq.layout, {responsive: true});
@@ -681,14 +737,52 @@
 
         function loadTimeSeriesPlots() {
             fetch("{{ url_for('eda.timeseries_analysis') }}")
-                .then(res => res.json())
+                .then(parseApiResponse)
                 .then(data => {
                     Plotly.newPlot('ts-cl80', data.cl80.data, data.cl80.layout, {responsive: true});
                     Plotly.newPlot('ts-tss', data.tss.data, data.tss.layout, {responsive: true});
                     Plotly.newPlot('ts-ph', data.ph.data, data.ph.layout, {responsive: true});
                     Plotly.newPlot('ts-debit', data.debit.data, data.debit.layout, {responsive: true});
-                    Plotly.newPlot('ts-chem', data.chem.data, data.chem.layout, {responsive: true});
+                    Plotly.newPlot('ts-lags', data.lags.data, data.lags.layout, {responsive: true});
+                    resizePlots(['ts-cl80', 'ts-tss', 'ts-ph', 'ts-debit', 'ts-lags']);
+                })
+                .catch(error => showPlotError(['ts-cl80', 'ts-tss', 'ts-ph', 'ts-debit', 'ts-lags'], error.message));
+        }
+
+        function parseApiResponse(response) {
+            return response.json().then(data => {
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || `Permintaan gagal (${response.status})`);
+                }
+                return data;
+            });
+        }
+
+        function showPlotError(elementIds, message) {
+            elementIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    Plotly.purge(element);
+                    element.innerHTML = `<div class="alert alert-info m-3" role="status">${escapeHtml(message)}</div>`;
+                }
+            });
+        }
+
+        function escapeHtml(value) {
+            const node = document.createElement('div');
+            node.textContent = value;
+            return node.innerHTML;
+        }
+
+        function resizePlots(elementIds) {
+            window.requestAnimationFrame(() => {
+                elementIds.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element && element.data) {
+                        Plotly.Plots.resize(element);
+                    }
                 });
+            });
         }
     });
 

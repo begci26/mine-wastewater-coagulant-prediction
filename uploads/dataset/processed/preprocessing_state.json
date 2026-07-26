@@ -17,7 +17,7 @@
   "cleaning_removed_count": 2661,
   "cleaning_message": "Target/rentang dibersihkan, timestamp dibentuk, data diurutkan kronologis, duplikat dihapus, lalu lag dan fitur turunan dibuat.",
   "type_conversion_errors": [
-    "Inlet pH: 2 nilai tidak dapat dikonversi"
+    "Inlet pH: 1 dinormalisasi, 2 menjadi missing/ditangani"
   ],
   "missing_checked": false,
   "missing_stats": {},
@@ -52,15 +52,34 @@
     "Beban_TSS": true
   },
   "lag_rows_deleted": 3,
-  "scaler_applied": false,
+  "scaler_applied": true,
   "scaler_strategy": "standard",
-  "scaler_message": null,
-  "split": false,
+  "scaler_message": "Median, IQR/Winsorization, dan StandardScaler di-fit pada training saja.",
+  "split": true,
   "split_ratio": 20,
   "split_method": "chronological_80_20",
-  "train_shape": null,
-  "test_shape": null,
-  "comparison": {},
+  "train_shape": [
+    2024,
+    11
+  ],
+  "test_shape": [
+    507,
+    11
+  ],
+  "comparison": {
+    "before_rows": 5195,
+    "after_rows": 2531,
+    "before_cols": 9,
+    "after_cols": 15,
+    "before_missing": 0,
+    "after_missing": 0,
+    "before_duplicates": 0,
+    "after_duplicates": 0,
+    "before_outliers": 0,
+    "after_outliers": 0,
+    "before_features": 5,
+    "after_features": 11
+  },
   "cleaning_summary": {
     "preprocessing_input_rows": 5195,
     "invalid_target_rows_removed": 2639,
@@ -70,7 +89,346 @@
     "lag_incomplete_rows_removed": 3,
     "final_row_count": 2531,
     "type_conversion_warnings": [
-      "Inlet pH: 2 nilai tidak dapat dikonversi"
-    ]
+      "Inlet pH: 1 dinormalisasi, 2 menjadi missing/ditangani"
+    ],
+    "conversion_report": {
+      "column_summary": {
+        "Inlet TSS (mg/L)": {
+          "success": 5195,
+          "normalized": 0,
+          "missing": 0,
+          "invalid": 0,
+          "usable": 5195,
+          "total": 5195
+        },
+        "Inlet pH": {
+          "success": 5192,
+          "normalized": 1,
+          "missing": 1,
+          "invalid": 1,
+          "usable": 5193,
+          "total": 5195
+        },
+        "Outlet TSS (mg/L)": {
+          "success": 5195,
+          "normalized": 0,
+          "missing": 0,
+          "invalid": 0,
+          "usable": 5195,
+          "total": 5195
+        },
+        "Outlet pH": {
+          "success": 5195,
+          "normalized": 0,
+          "missing": 0,
+          "invalid": 0,
+          "usable": 5195,
+          "total": 5195
+        },
+        "Inlet Disch (m3/s)": {
+          "success": 5195,
+          "normalized": 0,
+          "missing": 0,
+          "invalid": 0,
+          "usable": 5195,
+          "total": 5195
+        },
+        "Dosis CL-80 (ppm)": {
+          "success": 5195,
+          "normalized": 0,
+          "missing": 0,
+          "invalid": 0,
+          "usable": 5195,
+          "total": 5195
+        }
+      },
+      "details": [
+        {
+          "column": "Inlet pH",
+          "row_index": 3194,
+          "timestamp": "2026-01-01 01:00:00",
+          "original_value": "7,67",
+          "root_cause": "Format lokal/whitespace",
+          "action": "Dinormalisasi lalu dikonversi",
+          "final_status": "berhasil_dinormalisasi"
+        },
+        {
+          "column": "Inlet pH",
+          "row_index": 3599,
+          "timestamp": "2026-01-20 17:00:00",
+          "original_value": null,
+          "root_cause": "Nilai kosong",
+          "action": "Dipertahankan sebagai missing; akan diimputasi dengan median training",
+          "final_status": "missing_akan_diimputasi"
+        },
+        {
+          "column": "Inlet pH",
+          "row_index": 3606,
+          "timestamp": "2026-01-20 00:00:00",
+          "original_value": "7..9",
+          "root_cause": "Terdapat lebih dari satu titik desimal",
+          "action": "Dikonversi menjadi missing; akan diimputasi dengan median training",
+          "final_status": "missing_akan_diimputasi"
+        }
+      ],
+      "warnings": [
+        "Inlet pH: 1 dinormalisasi, 2 menjadi missing/ditangani"
+      ],
+      "fatal_errors": [],
+      "has_fatal_errors": false
+    },
+    "has_fatal_conversion_errors": false
+  },
+  "conversion_report": {
+    "column_summary": {
+      "Inlet TSS (mg/L)": {
+        "success": 5195,
+        "normalized": 0,
+        "missing": 0,
+        "invalid": 0,
+        "usable": 5195,
+        "total": 5195
+      },
+      "Inlet pH": {
+        "success": 5192,
+        "normalized": 1,
+        "missing": 1,
+        "invalid": 1,
+        "usable": 5193,
+        "total": 5195
+      },
+      "Outlet TSS (mg/L)": {
+        "success": 5195,
+        "normalized": 0,
+        "missing": 0,
+        "invalid": 0,
+        "usable": 5195,
+        "total": 5195
+      },
+      "Outlet pH": {
+        "success": 5195,
+        "normalized": 0,
+        "missing": 0,
+        "invalid": 0,
+        "usable": 5195,
+        "total": 5195
+      },
+      "Inlet Disch (m3/s)": {
+        "success": 5195,
+        "normalized": 0,
+        "missing": 0,
+        "invalid": 0,
+        "usable": 5195,
+        "total": 5195
+      },
+      "Dosis CL-80 (ppm)": {
+        "success": 5195,
+        "normalized": 0,
+        "missing": 0,
+        "invalid": 0,
+        "usable": 5195,
+        "total": 5195
+      }
+    },
+    "details": [
+      {
+        "column": "Inlet pH",
+        "row_index": 3194,
+        "timestamp": "2026-01-01 01:00:00",
+        "original_value": "7,67",
+        "root_cause": "Format lokal/whitespace",
+        "action": "Dinormalisasi lalu dikonversi",
+        "final_status": "berhasil_dinormalisasi"
+      },
+      {
+        "column": "Inlet pH",
+        "row_index": 3599,
+        "timestamp": "2026-01-20 17:00:00",
+        "original_value": null,
+        "root_cause": "Nilai kosong",
+        "action": "Dipertahankan sebagai missing; akan diimputasi dengan median training",
+        "final_status": "missing_akan_diimputasi"
+      },
+      {
+        "column": "Inlet pH",
+        "row_index": 3606,
+        "timestamp": "2026-01-20 00:00:00",
+        "original_value": "7..9",
+        "root_cause": "Terdapat lebih dari satu titik desimal",
+        "action": "Dikonversi menjadi missing; akan diimputasi dengan median training",
+        "final_status": "missing_akan_diimputasi"
+      }
+    ],
+    "warnings": [
+      "Inlet pH: 1 dinormalisasi, 2 menjadi missing/ditangani"
+    ],
+    "fatal_errors": [],
+    "has_fatal_errors": false
+  },
+  "has_fatal_conversion_errors": false,
+  "pipeline_blocked": false,
+  "preprocessing_metadata": {
+    "total_final_observations": 2531,
+    "training_observations": 2024,
+    "testing_observations": 507,
+    "training_date_range": [
+      "2025-06-01T03:00:00",
+      "2026-03-17T17:00:00"
+    ],
+    "testing_date_range": [
+      "2026-03-17T18:00:00",
+      "2026-04-24T18:00:00"
+    ],
+    "split_ratio": "0.7997:0.2003",
+    "split_method": "chronological_80_20",
+    "final_feature_names": [
+      "Inlet TSS (mg/L)",
+      "Inlet pH",
+      "Outlet TSS (mg/L)",
+      "Outlet pH",
+      "Inlet Disch (m3/s)",
+      "Kolom T1",
+      "Kolom T2",
+      "Kolom T3",
+      "Efisiensi_TSS",
+      "Delta_pH",
+      "Beban_TSS"
+    ],
+    "feature_count": 11,
+    "artifact_schema_version": 2,
+    "preprocessing": {
+      "feature_names": [
+        "Inlet TSS (mg/L)",
+        "Inlet pH",
+        "Outlet TSS (mg/L)",
+        "Outlet pH",
+        "Inlet Disch (m3/s)",
+        "Kolom T1",
+        "Kolom T2",
+        "Kolom T3",
+        "Efisiensi_TSS",
+        "Delta_pH",
+        "Beban_TSS"
+      ],
+      "medians": {
+        "Inlet TSS (mg/L)": 559.0,
+        "Inlet pH": 7.72,
+        "Outlet TSS (mg/L)": 131.0,
+        "Outlet pH": 7.74,
+        "Inlet Disch (m3/s)": 2.05,
+        "Kolom T1": 2.1450021450021453,
+        "Kolom T2": 2.1450021450021453,
+        "Kolom T3": 2.1450021450021453,
+        "Efisiensi_TSS": 75.80983656701517,
+        "Delta_pH": 0.0,
+        "Beban_TSS": 1179.8845000000001
+      },
+      "iqr_bounds": {
+        "Inlet TSS (mg/L)": {
+          "q1": 394.75,
+          "q3": 757.5,
+          "iqr": 362.75,
+          "lower_bound": -149.375,
+          "upper_bound": 1301.625
+        },
+        "Inlet pH": {
+          "q1": 7.57,
+          "q3": 7.9,
+          "iqr": 0.33000000000000007,
+          "lower_bound": 7.075,
+          "upper_bound": 8.395
+        },
+        "Outlet TSS (mg/L)": {
+          "q1": 99.0,
+          "q3": 163.0,
+          "iqr": 64.0,
+          "lower_bound": 3.0,
+          "upper_bound": 259.0
+        },
+        "Outlet pH": {
+          "q1": 7.51,
+          "q3": 7.95,
+          "iqr": 0.4400000000000004,
+          "lower_bound": 6.85,
+          "upper_bound": 8.610000000000001
+        },
+        "Inlet Disch (m3/s)": {
+          "q1": 1.852,
+          "q3": 2.289,
+          "iqr": 0.43700000000000006,
+          "lower_bound": 1.1965,
+          "upper_bound": 2.9445
+        },
+        "Kolom T1": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837
+        },
+        "Kolom T2": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837
+        },
+        "Kolom T3": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837
+        },
+        "Efisiensi_TSS": {
+          "q1": 66.22768670309654,
+          "q3": 84.49839510658916,
+          "iqr": 18.27070840349262,
+          "lower_bound": 38.82162409785761,
+          "upper_bound": 111.90445771182809
+        },
+        "Delta_pH": {
+          "q1": -0.13999999999999968,
+          "q3": 0.11000000000000032,
+          "iqr": 0.25,
+          "lower_bound": -0.5149999999999997,
+          "upper_bound": 0.4850000000000003
+        },
+        "Beban_TSS": {
+          "q1": 718.13875,
+          "q3": 1758.3540000000003,
+          "iqr": 1040.2152500000002,
+          "lower_bound": -842.1841250000003,
+          "upper_bound": 3318.6768750000006
+        }
+      },
+      "scaler_mean": {
+        "Inlet TSS (mg/L)": 624.4191576086956,
+        "Inlet pH": 7.735171541501976,
+        "Outlet TSS (mg/L)": 132.58646245059288,
+        "Outlet pH": 7.7100335968379445,
+        "Inlet Disch (m3/s)": 2.0599910573122533,
+        "Kolom T1": 2.4767948507281012,
+        "Kolom T2": 2.4776882171595207,
+        "Kolom T3": 2.4785870512163424,
+        "Efisiensi_TSS": 74.67037822719443,
+        "Delta_pH": -0.021588043478260852,
+        "Beban_TSS": 1349.5659418354744
+      },
+      "scaler_scale": {
+        "Inlet TSS (mg/L)": 279.13149797245245,
+        "Inlet pH": 0.24267312010549177,
+        "Outlet TSS (mg/L)": 46.42567516750264,
+        "Outlet pH": 0.34459869519335096,
+        "Inlet Disch (m3/s)": 0.38484533874919796,
+        "Kolom T1": 1.405172950360635,
+        "Kolom T2": 1.4045654545025708,
+        "Kolom T3": 1.4039498591628767,
+        "Efisiensi_TSS": 12.8410252415712,
+        "Delta_pH": 0.21569082935743764,
+        "Beban_TSS": 779.6968429782128
+      },
+      "fit_scope": "training_period_only"
+    }
   }
 }

@@ -1,0 +1,86 @@
+{
+  "column_summary": {
+    "Inlet TSS (mg/L)": {
+      "success": 5195,
+      "normalized": 0,
+      "missing": 0,
+      "invalid": 0,
+      "usable": 5195,
+      "total": 5195
+    },
+    "Inlet pH": {
+      "success": 5192,
+      "normalized": 1,
+      "missing": 1,
+      "invalid": 1,
+      "usable": 5193,
+      "total": 5195
+    },
+    "Outlet TSS (mg/L)": {
+      "success": 5195,
+      "normalized": 0,
+      "missing": 0,
+      "invalid": 0,
+      "usable": 5195,
+      "total": 5195
+    },
+    "Outlet pH": {
+      "success": 5195,
+      "normalized": 0,
+      "missing": 0,
+      "invalid": 0,
+      "usable": 5195,
+      "total": 5195
+    },
+    "Inlet Disch (m3/s)": {
+      "success": 5195,
+      "normalized": 0,
+      "missing": 0,
+      "invalid": 0,
+      "usable": 5195,
+      "total": 5195
+    },
+    "Dosis CL-80 (ppm)": {
+      "success": 5195,
+      "normalized": 0,
+      "missing": 0,
+      "invalid": 0,
+      "usable": 5195,
+      "total": 5195
+    }
+  },
+  "details": [
+    {
+      "column": "Inlet pH",
+      "row_index": 3194,
+      "timestamp": "2026-01-01 01:00:00",
+      "original_value": "7,67",
+      "root_cause": "Format lokal/whitespace",
+      "action": "Dinormalisasi lalu dikonversi",
+      "final_status": "berhasil_dinormalisasi"
+    },
+    {
+      "column": "Inlet pH",
+      "row_index": 3599,
+      "timestamp": "2026-01-20 17:00:00",
+      "original_value": null,
+      "root_cause": "Nilai kosong",
+      "action": "Dipertahankan sebagai missing; akan diimputasi dengan median training",
+      "final_status": "missing_akan_diimputasi"
+    },
+    {
+      "column": "Inlet pH",
+      "row_index": 3606,
+      "timestamp": "2026-01-20 00:00:00",
+      "original_value": "7..9",
+      "root_cause": "Terdapat lebih dari satu titik desimal",
+      "action": "Dikonversi menjadi missing; akan diimputasi dengan median training",
+      "final_status": "missing_akan_diimputasi"
+    }
+  ],
+  "warnings": [
+    "Inlet pH: 1 dinormalisasi, 2 menjadi missing/ditangani"
+  ],
+  "fatal_errors": [],
+  "has_fatal_errors": false
+}
