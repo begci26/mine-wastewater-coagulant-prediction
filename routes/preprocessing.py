@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 
+import joblib
 import pandas as pd
 import plotly.express as px
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
@@ -18,6 +19,47 @@ from utils.helpers import (
 from utils.logger import app_logger
 
 preprocessing_bp = Blueprint("preprocessing", __name__)
+
+STATUS_PRESENTATION = {
+    "not_started": {
+        "label": "Belum Diproses",
+        "badge_class": "bg-secondary",
+        "message": "Tahap preprocessing final belum dijalankan.",
+    },
+    "waiting_for_split": {
+        "label": "Menunggu Split",
+        "badge_class": "bg-info text-dark",
+        "message": (
+            "Median dan batas IQR akan dihitung setelah pembagian data agar hanya "
+            "menggunakan data training."
+        ),
+    },
+    "processing": {
+        "label": "Sedang Diproses",
+        "badge_class": "bg-primary",
+        "message": "Proses preprocessing sedang dijalankan.",
+    },
+    "completed": {
+        "label": "Selesai",
+        "badge_class": "bg-success",
+        "message": "Tahap preprocessing selesai.",
+    },
+    "completed_with_warning": {
+        "label": "Selesai dengan Peringatan",
+        "badge_class": "bg-warning text-dark",
+        "message": "Tahap preprocessing selesai dengan rincian yang perlu diperhatikan.",
+    },
+    "failed": {
+        "label": "Gagal",
+        "badge_class": "bg-danger",
+        "message": "Tahap preprocessing gagal.",
+    },
+    "unknown": {
+        "label": "Status belum tersedia",
+        "badge_class": "bg-secondary",
+        "message": "Metadata lama belum memiliki bukti status yang cukup.",
+    },
+}
 
 
 def get_preprocessing_paths():
@@ -77,6 +119,10 @@ def _initial_state():
         "train_shape": None,
         "test_shape": None,
         "comparison": {},
+        "preprocessing_run": {
+            "status": "not_started",
+            "message": "Tahap preprocessing final belum dijalankan.",
+        },
     }
 
 
@@ -96,11 +142,185 @@ def get_or_init_state():
         return state
     try:
         with open(state_path, encoding="utf-8") as handle:
-            return json.load(handle)
+            state = json.load(handle)
+        if _synchronize_preprocessing_status(state):
+            save_state(state)
+        return state
     except Exception:
         state = _initial_state()
         save_state(state)
         return state
+
+
+def _processed_file(name):
+    return os.path.join(Config.UPLOAD_FOLDER, "processed", name)
+
+
+def _has_completed_evidence(metadata):
+    if not isinstance(metadata, dict):
+        return False
+    imputation = metadata.get("imputation", {})
+    outlier = metadata.get("outlier_handling", {})
+    scaling = metadata.get("scaling", {})
+    return bool(
+        metadata.get("split_completed")
+        and metadata.get("split_method") == "chronological_80_20"
+        and imputation.get("status") == "completed"
+        and imputation.get("fit_source") == "training_only"
+        and isinstance(imputation.get("columns"), dict)
+        and outlier.get("status") == "completed"
+        and outlier.get("fit_source") == "training_only"
+        and isinstance(outlier.get("bounds"), dict)
+        and scaling.get("status") == "completed"
+        and scaling.get("fit_source") == "training_only"
+    )
+
+
+def _migrate_legacy_status(state):
+    """Reconstruct legacy status only when split files and fitted object prove completion."""
+    metadata = state.get("preprocessing_metadata", {})
+    legacy_preprocessing = metadata.get("preprocessing", {})
+    required_files = [
+        _processed_file("x_train_raw.csv"),
+        _processed_file("x_test_raw.csv"),
+        _processed_file("x_train.csv"),
+        _processed_file("x_test.csv"),
+        os.path.join(Config.MODEL_FOLDER, "preprocessor.joblib"),
+    ]
+    if not (
+        state.get("split")
+        and metadata.get("split_method") == "chronological_80_20"
+        and legacy_preprocessing.get("fit_scope") == "training_period_only"
+        and all(os.path.exists(path) for path in required_files)
+    ):
+        return False
+    try:
+        preprocessor = joblib.load(os.path.join(Config.MODEL_FOLDER, "preprocessor.joblib"))
+        X_train_raw = pd.read_csv(_processed_file("x_train_raw.csv"))
+        X_test_raw = pd.read_csv(_processed_file("x_test_raw.csv"))
+        evidence = preprocessor.processing_status_metadata(X_train_raw, X_test_raw)
+        metadata.update(evidence)
+        state["preprocessing_metadata"] = metadata
+        state["status_migrated_from_legacy_evidence"] = True
+        return True
+    except Exception as error:
+        app_logger.warning("Legacy preprocessing status could not be verified: %s", error)
+        return False
+
+
+def _synchronize_preprocessing_status(state):
+    changed = False
+    metadata = state.get("preprocessing_metadata", {})
+    if state.get("split") and not _has_completed_evidence(metadata):
+        changed = _migrate_legacy_status(state)
+        metadata = state.get("preprocessing_metadata", {})
+
+    run = state.get("preprocessing_run", {})
+    if run.get("status") == "failed":
+        status = "failed"
+    elif run.get("status") == "processing":
+        status = "processing"
+    elif _has_completed_evidence(metadata):
+        status = "completed"
+    elif state.get("split"):
+        status = "unknown"
+    else:
+        status = "waiting_for_split"
+
+    if _has_completed_evidence(metadata):
+        imputation = metadata["imputation"]
+        outlier = metadata["outlier_handling"]
+        missing_before = int(imputation.get("total_missing_before", 0))
+        missing_after = int(imputation.get("total_missing_after", 0))
+        imputation_status = (
+            "completed_with_warning" if missing_before > 0 else "completed"
+        )
+        state.update(
+            {
+                "missing_checked": True,
+                "missing_handled": True,
+                "missing_strategy": "training_median_only",
+                "missing_handled_count": missing_before,
+                "missing_stats": imputation.get("columns", {}),
+                "missing_message": (
+                    f"Imputasi telah diterapkan pada {missing_before} nilai menggunakan "
+                    "median dari data training."
+                    if missing_before
+                    else "Pemeriksaan selesai, tidak ditemukan nilai kosong yang perlu diimputasi."
+                ),
+                "outliers_detected": True,
+                "outliers_handled": True,
+                "outliers_strategy": "train_fitted_winsorization",
+                "outliers_stats": outlier.get("bounds", {}),
+                "outliers_count": int(outlier.get("total_train_clipped", 0))
+                + int(outlier.get("total_test_clipped", 0)),
+                "outliers_handled_count": int(outlier.get("total_train_clipped", 0))
+                + int(outlier.get("total_test_clipped", 0)),
+                "outliers_message": (
+                    "Batas IQR telah dihitung dari data training dan diterapkan pada "
+                    "data training dan testing."
+                    if int(outlier.get("total_train_clipped", 0))
+                    + int(outlier.get("total_test_clipped", 0))
+                    else "Pemeriksaan selesai, tidak ada nilai yang memerlukan clipping."
+                ),
+                "automatic_step_status": {
+                    "imputation": imputation_status,
+                    "outlier_handling": "completed",
+                    "scaling": "completed",
+                },
+            }
+        )
+        changed = True
+    else:
+        state["missing_handled"] = False
+        state["outliers_handled"] = False
+        state["automatic_step_status"] = {
+            "imputation": status,
+            "outlier_handling": status,
+            "scaling": status,
+        }
+        changed = True
+    return changed
+
+
+def _status_view(state, key):
+    code = state.get("automatic_step_status", {}).get(key, "unknown")
+    view = dict(STATUS_PRESENTATION.get(code, STATUS_PRESENTATION["unknown"]))
+    view["code"] = code
+    if key == "imputation":
+        if code in {"completed", "completed_with_warning"}:
+            view["message"] = state.get("missing_message") or view["message"]
+        elif code == "waiting_for_split":
+            view["message"] = (
+                "Imputasi akan dijalankan setelah pembagian data menggunakan median data training."
+            )
+    elif key == "outlier_handling":
+        if code in {"completed", "completed_with_warning"}:
+            view["message"] = state.get("outliers_message") or view["message"]
+        elif code == "waiting_for_split":
+            view["message"] = (
+                "Batas IQR akan dihitung dari data training setelah pembagian data."
+            )
+    if code == "failed":
+        view["message"] = state.get("preprocessing_run", {}).get(
+            "message", view["message"]
+        )
+    return view
+
+
+def _reset_final_processing_status(state):
+    state.pop("preprocessing_metadata", None)
+    state["preprocessing_run"] = {
+        "status": "waiting_for_split",
+        "message": "Menunggu final preprocessing dan chronological split.",
+    }
+    state["missing_handled"] = False
+    state["outliers_handled"] = False
+    state["automatic_step_status"] = {
+        "imputation": "waiting_for_split",
+        "outlier_handling": "waiting_for_split",
+        "scaling": "waiting_for_split",
+    }
 
 
 def _engineer_from_sanitized_source(state):
@@ -192,12 +412,16 @@ def index():
         flash("Silakan unggah dataset terlebih dahulu.", "warning")
         return redirect(url_for("dataset.index"))
     state = get_or_init_state()
+    if _synchronize_preprocessing_status(state):
+        save_state(state)
     active_path, _ = get_preprocessing_paths()
     raw = pd.read_csv(get_dataset_path())
     active = pd.read_csv(active_path) if os.path.exists(active_path) else raw
     return render_template(
         "preprocessing.html",
         state=state,
+        missing_status=_status_view(state, "imputation"),
+        outlier_status=_status_view(state, "outlier_handling"),
         preview_raw=raw.head(8).to_dict(orient="records"),
         preview_active=active.head(8).to_dict(orient="records"),
     )
@@ -219,6 +443,7 @@ def reset():
 def step1_clean():
     state = get_or_init_state()
     try:
+        _reset_final_processing_status(state)
         _, cleaning = _engineer_from_sanitized_source(state)
         save_state(state)
         flash(
@@ -238,20 +463,35 @@ def step1_clean():
 def step2_missing():
     state = get_or_init_state()
     try:
+        if _has_completed_evidence(state.get("preprocessing_metadata", {})):
+            _synchronize_preprocessing_status(state)
+            save_state(state)
+            flash(state["missing_message"], "success")
+            return redirect(url_for("preprocessing.index") + "#step-2")
         if not state.get("feature_engineering_applied"):
             _engineer_from_sanitized_source(state)
         active = pd.read_csv(get_preprocessing_paths()[0])
         state["missing_checked"] = True
         state["missing_stats"] = WastewaterPreprocessor().check_missing_values(active)
-        state["missing_handled"] = True
+        state["missing_handled"] = False
         state["missing_strategy"] = "training_median_only"
         state["missing_message"] = (
             "Nilai fitur kosong dipertahankan hingga split; median akan di-fit hanya pada periode training."
         )
         state["missing_handled_count"] = int(active[MODEL_FEATURES].isna().sum().sum())
+        state["automatic_step_status"] = {
+            **state.get("automatic_step_status", {}),
+            "imputation": "waiting_for_split",
+        }
         save_state(state)
-        flash(state["missing_message"], "success")
+        flash(state["missing_message"], "info")
     except Exception as error:
+        state["preprocessing_run"] = {"status": "failed", "message": str(error)}
+        state["automatic_step_status"] = {
+            **state.get("automatic_step_status", {}),
+            "imputation": "failed",
+        }
+        save_state(state)
         flash(f"Gagal memeriksa missing value: {error}", "danger")
     return redirect(url_for("preprocessing.index") + "#step-2")
 
@@ -276,6 +516,11 @@ def step3_duplicate():
 def step4_outlier():
     state = get_or_init_state()
     try:
+        if _has_completed_evidence(state.get("preprocessing_metadata", {})):
+            _synchronize_preprocessing_status(state)
+            save_state(state)
+            flash(state["outliers_message"], "success")
+            return redirect(url_for("preprocessing.index") + "#step-4")
         if not state.get("feature_engineering_applied"):
             _engineer_from_sanitized_source(state)
         active = pd.read_csv(get_preprocessing_paths()[0])
@@ -285,18 +530,28 @@ def step4_outlier():
                 "outliers_detected": True,
                 "outliers_stats": stats,
                 "outliers_count": len(indices),
-                "outliers_handled": True,
+                "outliers_handled": False,
                 "outliers_strategy": "train_fitted_winsorization",
                 "outliers_message": (
                     "Outlier ditandai untuk diagnostik. Batas final dihitung dari training saja "
                     "setelah split dan diterapkan ke training/testing."
                 ),
                 "outliers_handled_count": 0,
+                "automatic_step_status": {
+                    **state.get("automatic_step_status", {}),
+                    "outlier_handling": "waiting_for_split",
+                },
             }
         )
         save_state(state)
-        flash(state["outliers_message"], "success")
+        flash(state["outliers_message"], "info")
     except Exception as error:
+        state["preprocessing_run"] = {"status": "failed", "message": str(error)}
+        state["automatic_step_status"] = {
+            **state.get("automatic_step_status", {}),
+            "outlier_handling": "failed",
+        }
+        save_state(state)
         flash(f"Gagal mendeteksi outlier: {error}", "danger")
     return redirect(url_for("preprocessing.index") + "#step-4")
 
@@ -305,6 +560,7 @@ def step4_outlier():
 def step5_feature_eng():
     state = get_or_init_state()
     try:
+        _reset_final_processing_status(state)
         _engineer_from_sanitized_source(state)
         save_state(state)
         flash(state["feature_engineering_message"], "success")
@@ -316,6 +572,26 @@ def step5_feature_eng():
 @preprocessing_bp.route("/step6_scale_split", methods=["POST"])
 def step6_scale_split():
     state = get_or_init_state()
+    state.pop("preprocessing_metadata", None)
+    state.update(
+        {
+            "preprocessing_run": {
+                "status": "processing",
+                "message": "Proses preprocessing sedang dijalankan.",
+                "started_at": pd.Timestamp.now().isoformat(),
+            },
+            "automatic_step_status": {
+                "imputation": "processing",
+                "outlier_handling": "processing",
+                "scaling": "processing",
+            },
+            "missing_handled": False,
+            "outliers_handled": False,
+            "split": False,
+            "scaler_applied": False,
+        }
+    )
+    save_state(state)
     try:
         engineered, cleaning = _engineer_from_sanitized_source(state)
         preprocessor = WastewaterPreprocessor()
@@ -357,6 +633,11 @@ def step6_scale_split():
                 "train_shape": [len(train), len(MODEL_FEATURES)],
                 "test_shape": [len(test), len(MODEL_FEATURES)],
                 "preprocessing_metadata": split_metadata,
+                "preprocessing_run": {
+                    "status": "completed",
+                    "message": "Preprocessing final selesai.",
+                    "completed_at": split_metadata["scaling"]["completed_at"],
+                },
                 "current_shape": list(engineered.shape),
                 "comparison": {
                     "before_rows": state["initial_shape"][0],
@@ -374,6 +655,7 @@ def step6_scale_split():
                 },
             }
         )
+        _synchronize_preprocessing_status(state)
         save_state(state)
         session["preprocessing_complete"] = True
         session["preprocessing_results"] = {
@@ -389,6 +671,25 @@ def step6_scale_split():
             session.pop(key, None)
         flash("Preprocessing kronologis selesai tanpa kebocoran data.", "success")
     except Exception as error:
+        state.update(
+            {
+                "preprocessing_run": {
+                    "status": "failed",
+                    "message": str(error),
+                    "failed_at": pd.Timestamp.now().isoformat(),
+                },
+                "automatic_step_status": {
+                    "imputation": "failed",
+                    "outlier_handling": "failed",
+                    "scaling": "failed",
+                },
+                "missing_handled": False,
+                "outliers_handled": False,
+                "split": False,
+                "scaler_applied": False,
+            }
+        )
+        save_state(state)
         app_logger.error("Final preprocessing failed: %s", error, exc_info=True)
         flash(f"Gagal menyelesaikan preprocessing: {error}", "danger")
     return redirect(url_for("preprocessing.index") + "#step-6")

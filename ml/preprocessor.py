@@ -199,6 +199,89 @@ class LeakageSafePreprocessor(BaseEstimator, TransformerMixin):
             "fit_scope": "training_period_only",
         }
 
+    def processing_status_metadata(self, X_train_raw, X_test_raw, completed_at=None):
+        """Return auditable evidence for UI status reconstruction."""
+        completed_at = completed_at or pd.Timestamp.now().isoformat()
+        train_imputed = self.imputer_.transform(X_train_raw.loc[:, MODEL_FEATURES])
+        test_imputed = self.imputer_.transform(X_test_raw.loc[:, MODEL_FEATURES])
+
+        imputation_columns = {}
+        outlier_bounds = {}
+        total_missing_before = 0
+        total_missing_after = 0
+        total_train_clipped = 0
+        total_test_clipped = 0
+
+        for index, feature in enumerate(MODEL_FEATURES):
+            train_missing_before = int(X_train_raw[feature].isna().sum())
+            test_missing_before = int(X_test_raw[feature].isna().sum())
+            train_missing_after = int(np.isnan(train_imputed[:, index]).sum())
+            test_missing_after = int(np.isnan(test_imputed[:, index]).sum())
+            total_missing_before += train_missing_before + test_missing_before
+            total_missing_after += train_missing_after + test_missing_after
+            imputation_columns[feature] = {
+                "train_missing_before": train_missing_before,
+                "test_missing_before": test_missing_before,
+                "total_missing_before": train_missing_before + test_missing_before,
+                "training_median": float(self.imputer_.statistics_[index]),
+                "train_missing_after": train_missing_after,
+                "test_missing_after": test_missing_after,
+                "total_missing_after": train_missing_after + test_missing_after,
+            }
+
+            lower = float(self.winsorizer_.lower_bounds_[index])
+            upper = float(self.winsorizer_.upper_bounds_[index])
+            train_clipped = int(
+                ((train_imputed[:, index] < lower) | (train_imputed[:, index] > upper)).sum()
+            )
+            test_clipped = int(
+                ((test_imputed[:, index] < lower) | (test_imputed[:, index] > upper)).sum()
+            )
+            total_train_clipped += train_clipped
+            total_test_clipped += test_clipped
+            outlier_bounds[feature] = {
+                "q1": float(self.winsorizer_.q1_[index]),
+                "q3": float(self.winsorizer_.q3_[index]),
+                "iqr": float(self.winsorizer_.iqr_[index]),
+                "lower_bound": lower,
+                "upper_bound": upper,
+                "train_clipped_count": train_clipped,
+                "test_clipped_count": test_clipped,
+            }
+
+        return {
+            "split_completed": True,
+            "split_method": "chronological_80_20",
+            "imputation": {
+                "status": "completed",
+                "method": "median",
+                "fit_source": "training_only",
+                "applied_to": ["training", "testing"],
+                "columns": imputation_columns,
+                "total_missing_before": total_missing_before,
+                "total_missing_after": total_missing_after,
+                "completed_at": completed_at,
+            },
+            "outlier_handling": {
+                "status": "completed",
+                "method": "IQR_clipping",
+                "factor": 1.5,
+                "fit_source": "training_only",
+                "applied_to": ["training", "testing"],
+                "bounds": outlier_bounds,
+                "total_train_clipped": total_train_clipped,
+                "total_test_clipped": total_test_clipped,
+                "completed_at": completed_at,
+            },
+            "scaling": {
+                "status": "completed",
+                "method": "StandardScaler",
+                "fit_source": "training_only",
+                "applied_to": ["training", "testing"],
+                "completed_at": completed_at,
+            },
+        }
+
 
 def build_fold_safe_pipeline(estimator):
     return Pipeline(
@@ -375,6 +458,9 @@ class WastewaterPreprocessor:
         self.preprocessor = LeakageSafePreprocessor(feature_names=MODEL_FEATURES)
         X_train = self.preprocessor.fit_transform(X_train_raw, y_train)
         X_test = self.preprocessor.transform(X_test_raw)
+        processing_status = self.preprocessor.processing_status_metadata(
+            X_train_raw, X_test_raw
+        )
 
         processed_dir = os.path.join(Config.UPLOAD_FOLDER, "processed")
         os.makedirs(processed_dir, exist_ok=True)
@@ -411,6 +497,7 @@ class WastewaterPreprocessor:
             "feature_count": len(MODEL_FEATURES),
             "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
             "preprocessing": self.preprocessor.statistics_metadata(),
+            **processing_status,
         }
         return train, test, metadata
 

@@ -291,61 +291,70 @@
         <div class="card shadow-sm process-card mb-4 {% if step == 2 %}active{% elif step < 2 %}inactive{% endif %}" id="step-2">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">2</span>Penanganan Nilai Kosong (Missing Value)</h5>
-                <span class="badge {% if state.missing_handled %}bg-success{% else %}bg-secondary{% endif %} px-3">
-                    {% if state.missing_handled %}Selesai{% else %}Menunggu Aksi{% endif %}
+                <span class="badge {{ missing_status.badge_class }} px-3" data-status="{{ missing_status.code }}">
+                    {{ missing_status.label }}
                 </span>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-5 border-end">
-                        <p class="small text-muted mb-3">Nilai kosong diperiksa sekarang, tetapi median baru di-fit setelah split menggunakan periode training saja.</p>
-                        {% if step == 2 %}
-                        <form action="{{ url_for('preprocessing.step2_missing') }}" method="POST" onsubmit="showLoading('Menangani nilai kosong...');">
-                            <div class="mb-3">
-                                <label for="missing_strategy" class="form-label fw-semibold text-dark small">Strategi Metodologis</label>
-                                <select name="missing_strategy" id="missing_strategy" class="form-select form-select-sm">
-                                    <option value="median" selected>Median training-only setelah split</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-tools me-2"></i>Terapkan Imputasi</button>
-                        </form>
+                        <p class="small text-muted mb-3">{{ missing_status.message }}</p>
+                        {% if missing_status.code in ['completed', 'completed_with_warning'] %}
+                        <button class="btn btn-success btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
+                        {% elif missing_status.code == 'processing' %}
+                        <button class="btn btn-primary btn-sm disabled"><i class="fas fa-spinner fa-spin me-2"></i>Sedang Diproses</button>
+                        {% elif missing_status.code == 'failed' %}
+                        <button class="btn btn-danger btn-sm disabled"><i class="fas fa-times me-2"></i>Gagal</button>
                         {% else %}
-                        <button class="btn btn-secondary btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
+                        <button class="btn btn-outline-info btn-sm disabled"><i class="fas fa-cogs me-2"></i>Diterapkan Otomatis</button>
                         {% endif %}
                     </div>
                     <div class="col-md-7">
-                        {% if state.missing_checked %}
+                        {% if missing_status.code in ['completed', 'completed_with_warning'] %}
                         <div class="border rounded p-3 bg-light">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-list text-primary me-1"></i>Hasil Pemeriksaan Missing Value:</h6>
+                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-list text-primary me-1"></i>Bukti Imputasi Training-Only:</h6>
+                            {% if state.preprocessing_metadata.imputation.total_missing_before == 0 %}
+                            <div class="alert alert-success py-2 small mb-2">
+                                Pemeriksaan selesai, tidak ditemukan nilai kosong yang perlu diimputasi.
+                            </div>
+                            {% else %}
                             <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
                                 <table class="table table-sm table-hover text-center table-bordered bg-white small m-0" style="font-size: 0.75rem;">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Nama Kolom</th>
-                                            <th>Jumlah Missing</th>
-                                            <th>Persentase Missing</th>
+                                            <th>Fitur</th>
+                                            <th>Missing Train</th>
+                                            <th>Missing Test</th>
+                                            <th>Median Training</th>
+                                            <th>Missing Setelah</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for col, info in state.missing_stats.items() %}
+                                        {% if info.total_missing_before > 0 %}
                                         <tr>
                                             <td class="text-start fw-bold">{{ col }}</td>
-                                            <td>{{ info.count }}</td>
-                                            <td>{{ info.percentage }}%</td>
+                                            <td>{{ info.train_missing_before }}</td>
+                                            <td>{{ info.test_missing_before }}</td>
+                                            <td>{{ '%.6g'|format(info.training_median) }}</td>
+                                            <td>{{ info.total_missing_after }}</td>
                                         </tr>
+                                        {% endif %}
                                         {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
+                            {% endif %}
                             <div class="mt-2 pt-2 border-top small text-muted">
-                                <strong>Metode Terpilih:</strong> <span class="badge bg-secondary">{{ state.missing_strategy | upper }}</span> | 
-                                <strong>Jumlah Sel Terimputasi:</strong> {{ state.missing_handled_count }}
+                                <strong>Fit source:</strong> <span class="badge bg-secondary">TRAINING ONLY</span> |
+                                <strong>Missing sebelum:</strong> {{ state.preprocessing_metadata.imputation.total_missing_before }} |
+                                <strong>Missing setelah:</strong> {{ state.preprocessing_metadata.imputation.total_missing_after }}
                             </div>
                         </div>
                         {% else %}
                         <div class="text-center py-4 text-muted small">
                             <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">Tabel perhitungan missing value akan dirender secara dinamis setelah proses imputasi dijalankan.</p>
+                            <p class="m-0">{{ missing_status.message }}</p>
                         </div>
                         {% endif %}
                     </div>
@@ -398,30 +407,26 @@
         <div class="card shadow-sm process-card mb-4 {% if step == 4 %}active{% elif step < 4 %}inactive{% endif %}" id="step-4">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">4</span>Deteksi & Penanganan Outlier</h5>
-                <span class="badge {% if state.outliers_handled %}bg-success{% else %}bg-secondary{% endif %} px-3">
-                    {% if state.outliers_handled %}Selesai{% else %}Menunggu Aksi{% endif %}
+                <span class="badge {{ outlier_status.badge_class }} px-3" data-status="{{ outlier_status.code }}">
+                    {{ outlier_status.label }}
                 </span>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-5 border-end">
-                        <p class="small text-muted mb-3">Outlier ditampilkan secara diagnostik. Batas final IQR di-fit dari periode training saja setelah split, lalu dipakai untuk clipping train dan test.</p>
-                        {% if step == 4 %}
-                        <form action="{{ url_for('preprocessing.step4_outlier') }}" method="POST" onsubmit="showLoading('Menangani outlier data...');">
-                            <div class="mb-3">
-                                <label for="outlier_strategy" class="form-label fw-semibold text-dark small">Strategi Metodologis</label>
-                                <select name="outlier_strategy" id="outlier_strategy" class="form-select form-select-sm">
-                                    <option value="winsorize" selected>Training-only IQR/Winsorization</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-adjust me-2"></i>Proses Outlier</button>
-                        </form>
+                        <p class="small text-muted mb-3">{{ outlier_status.message }}</p>
+                        {% if outlier_status.code in ['completed', 'completed_with_warning'] %}
+                        <button class="btn btn-success btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
+                        {% elif outlier_status.code == 'processing' %}
+                        <button class="btn btn-primary btn-sm disabled"><i class="fas fa-spinner fa-spin me-2"></i>Sedang Diproses</button>
+                        {% elif outlier_status.code == 'failed' %}
+                        <button class="btn btn-danger btn-sm disabled"><i class="fas fa-times me-2"></i>Gagal</button>
                         {% else %}
-                        <button class="btn btn-secondary btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
+                        <button class="btn btn-outline-info btn-sm disabled"><i class="fas fa-cogs me-2"></i>Diterapkan Otomatis</button>
                         {% endif %}
                     </div>
                     <div class="col-md-7">
-                        {% if state.outliers_detected %}
+                        {% if outlier_status.code in ['completed', 'completed_with_warning'] %}
                         <div class="border rounded p-3 bg-light mb-3">
                             <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-chart-line text-primary me-1"></i>Tabel Batas Outlier IQR:</h6>
                             <div class="table-responsive mb-2" style="max-height: 180px; overflow-y: auto;">
@@ -429,30 +434,29 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Variabel</th>
-                                            <th>Q1</th>
-                                            <th>Q3</th>
                                             <th>Lower Bound</th>
                                             <th>Upper Bound</th>
-                                            <th>Outlier</th>
+                                            <th>Clipped Train</th>
+                                            <th>Clipped Test</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for col, info in state.outliers_stats.items() %}
                                         <tr>
                                             <td class="text-start fw-bold">{{ col }}</td>
-                                            <td>{{ info.q1 }}</td>
-                                            <td>{{ info.q3 }}</td>
                                             <td>{{ info.lower_bound }}</td>
                                             <td>{{ info.upper_bound }}</td>
-                                            <td><span class="badge bg-danger">{{ info.outliers_count }}</span></td>
+                                            <td><span class="badge bg-warning text-dark">{{ info.train_clipped_count }}</span></td>
+                                            <td><span class="badge bg-warning text-dark">{{ info.test_clipped_count }}</span></td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
                             <div class="small text-muted border-top pt-2 mt-2">
-                                <strong>Pilihan Tindakan:</strong> <span class="badge bg-secondary">{{ state.outliers_strategy | upper }}</span> | 
-                                <strong>Terpengaruh:</strong> {{ state.outliers_handled_count }} baris/sel.
+                                <strong>Fit source:</strong> <span class="badge bg-secondary">TRAINING ONLY</span> |
+                                <strong>Clipped train:</strong> {{ state.preprocessing_metadata.outlier_handling.total_train_clipped }} |
+                                <strong>Clipped test:</strong> {{ state.preprocessing_metadata.outlier_handling.total_test_clipped }}
                             </div>
                         </div>
                         
@@ -463,7 +467,7 @@
                         {% else %}
                         <div class="text-center py-4 text-muted small">
                             <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">Langkah ini akan merender sebaran Boxplot interaktif dan tabel threshold IQR setelah dijalankan.</p>
+                            <p class="m-0">{{ outlier_status.message }}</p>
                         </div>
                         {% endif %}
                     </div>

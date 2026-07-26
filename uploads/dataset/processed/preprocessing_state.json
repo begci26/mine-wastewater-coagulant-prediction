@@ -107,23 +107,223 @@
   },
   "has_fatal_conversion_errors": false,
   "pipeline_blocked": false,
-  "missing_checked": false,
-  "missing_stats": {},
-  "missing_handled": false,
+  "missing_checked": true,
+  "missing_stats": {
+    "Inlet TSS (mg/L)": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 559.0,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Inlet pH": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 7.72,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Outlet TSS (mg/L)": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 131.0,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Outlet pH": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 7.74,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Inlet Disch (m3/s)": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 2.05,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Kolom T1": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 2.1450021450021453,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Kolom T2": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 2.1450021450021453,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Kolom T3": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 2.1450021450021453,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Efisiensi_TSS": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 75.80983656701517,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Delta_pH": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 0.0,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    },
+    "Beban_TSS": {
+      "train_missing_before": 0,
+      "test_missing_before": 0,
+      "total_missing_before": 0,
+      "training_median": 1179.8845000000001,
+      "train_missing_after": 0,
+      "test_missing_after": 0,
+      "total_missing_after": 0
+    }
+  },
+  "missing_handled": true,
   "missing_strategy": "training_median_only",
-  "missing_message": null,
+  "missing_message": "Pemeriksaan selesai, tidak ditemukan nilai kosong yang perlu diimputasi.",
   "missing_handled_count": 0,
   "duplicates_checked": true,
   "duplicates_count": 0,
   "duplicates_handled": true,
   "duplicates_removed_count": 0,
-  "outliers_detected": false,
-  "outliers_stats": {},
-  "outliers_count": 0,
-  "outliers_handled": false,
+  "outliers_detected": true,
+  "outliers_stats": {
+    "Inlet TSS (mg/L)": {
+      "q1": 394.75,
+      "q3": 757.5,
+      "iqr": 362.75,
+      "lower_bound": -149.375,
+      "upper_bound": 1301.625,
+      "train_clipped_count": 63,
+      "test_clipped_count": 2
+    },
+    "Inlet pH": {
+      "q1": 7.57,
+      "q3": 7.9,
+      "iqr": 0.33000000000000007,
+      "lower_bound": 7.075,
+      "upper_bound": 8.395,
+      "train_clipped_count": 6,
+      "test_clipped_count": 0
+    },
+    "Outlet TSS (mg/L)": {
+      "q1": 99.0,
+      "q3": 163.0,
+      "iqr": 64.0,
+      "lower_bound": 3.0,
+      "upper_bound": 259.0,
+      "train_clipped_count": 15,
+      "test_clipped_count": 4
+    },
+    "Outlet pH": {
+      "q1": 7.51,
+      "q3": 7.95,
+      "iqr": 0.4400000000000004,
+      "lower_bound": 6.85,
+      "upper_bound": 8.610000000000001,
+      "train_clipped_count": 34,
+      "test_clipped_count": 6
+    },
+    "Inlet Disch (m3/s)": {
+      "q1": 1.852,
+      "q3": 2.289,
+      "iqr": 0.43700000000000006,
+      "lower_bound": 1.1965,
+      "upper_bound": 2.9445,
+      "train_clipped_count": 130,
+      "test_clipped_count": 30
+    },
+    "Kolom T1": {
+      "q1": 1.3576626479852287,
+      "q3": 3.394156619963072,
+      "iqr": 2.036493971977843,
+      "lower_bound": -1.697078309981536,
+      "upper_bound": 6.448897577929837,
+      "train_clipped_count": 7,
+      "test_clipped_count": 0
+    },
+    "Kolom T2": {
+      "q1": 1.3576626479852287,
+      "q3": 3.394156619963072,
+      "iqr": 2.036493971977843,
+      "lower_bound": -1.697078309981536,
+      "upper_bound": 6.448897577929837,
+      "train_clipped_count": 7,
+      "test_clipped_count": 0
+    },
+    "Kolom T3": {
+      "q1": 1.3576626479852287,
+      "q3": 3.394156619963072,
+      "iqr": 2.036493971977843,
+      "lower_bound": -1.697078309981536,
+      "upper_bound": 6.448897577929837,
+      "train_clipped_count": 7,
+      "test_clipped_count": 0
+    },
+    "Efisiensi_TSS": {
+      "q1": 66.22768670309654,
+      "q3": 84.49839510658916,
+      "iqr": 18.27070840349262,
+      "lower_bound": 38.82162409785761,
+      "upper_bound": 111.90445771182809,
+      "train_clipped_count": 19,
+      "test_clipped_count": 11
+    },
+    "Delta_pH": {
+      "q1": -0.13999999999999968,
+      "q3": 0.11000000000000032,
+      "iqr": 0.25,
+      "lower_bound": -0.5149999999999997,
+      "upper_bound": 0.4850000000000003,
+      "train_clipped_count": 113,
+      "test_clipped_count": 47
+    },
+    "Beban_TSS": {
+      "q1": 718.13875,
+      "q3": 1758.3540000000003,
+      "iqr": 1040.2152500000002,
+      "lower_bound": -842.1841250000003,
+      "upper_bound": 3318.6768750000006,
+      "train_clipped_count": 69,
+      "test_clipped_count": 5
+    }
+  },
+  "outliers_count": 575,
+  "outliers_handled": true,
   "outliers_strategy": "train_fitted_winsorization",
-  "outliers_message": null,
-  "outliers_handled_count": 0,
+  "outliers_message": "Batas IQR telah dihitung dari data training dan diterapkan pada data training dan testing.",
+  "outliers_handled_count": 575,
   "feature_engineering_applied": true,
   "feature_engineering_message": "T1/T2/T3 dibuat dari tiga observasi sebelumnya; Efisiensi_TSS, Delta_pH, dan Beban_TSS dibuat tanpa fitur rasio kimia.",
   "feature_engineering_validation": {
@@ -167,6 +367,16 @@
     "after_outliers": 0,
     "before_features": 5,
     "after_features": 11
+  },
+  "preprocessing_run": {
+    "status": "completed",
+    "message": "Preprocessing final selesai.",
+    "completed_at": "2026-07-27T01:31:38.911050"
+  },
+  "automatic_step_status": {
+    "imputation": "completed",
+    "outlier_handling": "completed",
+    "scaling": "completed"
   },
   "cleaning_summary": {
     "preprocessing_input_rows": 5195,
@@ -429,6 +639,244 @@
         "Beban_TSS": 779.6968429782128
       },
       "fit_scope": "training_period_only"
+    },
+    "split_completed": true,
+    "imputation": {
+      "status": "completed",
+      "method": "median",
+      "fit_source": "training_only",
+      "applied_to": [
+        "training",
+        "testing"
+      ],
+      "columns": {
+        "Inlet TSS (mg/L)": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 559.0,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Inlet pH": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 7.72,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Outlet TSS (mg/L)": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 131.0,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Outlet pH": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 7.74,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Inlet Disch (m3/s)": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 2.05,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Kolom T1": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 2.1450021450021453,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Kolom T2": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 2.1450021450021453,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Kolom T3": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 2.1450021450021453,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Efisiensi_TSS": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 75.80983656701517,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Delta_pH": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 0.0,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        },
+        "Beban_TSS": {
+          "train_missing_before": 0,
+          "test_missing_before": 0,
+          "total_missing_before": 0,
+          "training_median": 1179.8845000000001,
+          "train_missing_after": 0,
+          "test_missing_after": 0,
+          "total_missing_after": 0
+        }
+      },
+      "total_missing_before": 0,
+      "total_missing_after": 0,
+      "completed_at": "2026-07-27T01:31:38.911050"
+    },
+    "outlier_handling": {
+      "status": "completed",
+      "method": "IQR_clipping",
+      "factor": 1.5,
+      "fit_source": "training_only",
+      "applied_to": [
+        "training",
+        "testing"
+      ],
+      "bounds": {
+        "Inlet TSS (mg/L)": {
+          "q1": 394.75,
+          "q3": 757.5,
+          "iqr": 362.75,
+          "lower_bound": -149.375,
+          "upper_bound": 1301.625,
+          "train_clipped_count": 63,
+          "test_clipped_count": 2
+        },
+        "Inlet pH": {
+          "q1": 7.57,
+          "q3": 7.9,
+          "iqr": 0.33000000000000007,
+          "lower_bound": 7.075,
+          "upper_bound": 8.395,
+          "train_clipped_count": 6,
+          "test_clipped_count": 0
+        },
+        "Outlet TSS (mg/L)": {
+          "q1": 99.0,
+          "q3": 163.0,
+          "iqr": 64.0,
+          "lower_bound": 3.0,
+          "upper_bound": 259.0,
+          "train_clipped_count": 15,
+          "test_clipped_count": 4
+        },
+        "Outlet pH": {
+          "q1": 7.51,
+          "q3": 7.95,
+          "iqr": 0.4400000000000004,
+          "lower_bound": 6.85,
+          "upper_bound": 8.610000000000001,
+          "train_clipped_count": 34,
+          "test_clipped_count": 6
+        },
+        "Inlet Disch (m3/s)": {
+          "q1": 1.852,
+          "q3": 2.289,
+          "iqr": 0.43700000000000006,
+          "lower_bound": 1.1965,
+          "upper_bound": 2.9445,
+          "train_clipped_count": 130,
+          "test_clipped_count": 30
+        },
+        "Kolom T1": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837,
+          "train_clipped_count": 7,
+          "test_clipped_count": 0
+        },
+        "Kolom T2": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837,
+          "train_clipped_count": 7,
+          "test_clipped_count": 0
+        },
+        "Kolom T3": {
+          "q1": 1.3576626479852287,
+          "q3": 3.394156619963072,
+          "iqr": 2.036493971977843,
+          "lower_bound": -1.697078309981536,
+          "upper_bound": 6.448897577929837,
+          "train_clipped_count": 7,
+          "test_clipped_count": 0
+        },
+        "Efisiensi_TSS": {
+          "q1": 66.22768670309654,
+          "q3": 84.49839510658916,
+          "iqr": 18.27070840349262,
+          "lower_bound": 38.82162409785761,
+          "upper_bound": 111.90445771182809,
+          "train_clipped_count": 19,
+          "test_clipped_count": 11
+        },
+        "Delta_pH": {
+          "q1": -0.13999999999999968,
+          "q3": 0.11000000000000032,
+          "iqr": 0.25,
+          "lower_bound": -0.5149999999999997,
+          "upper_bound": 0.4850000000000003,
+          "train_clipped_count": 113,
+          "test_clipped_count": 47
+        },
+        "Beban_TSS": {
+          "q1": 718.13875,
+          "q3": 1758.3540000000003,
+          "iqr": 1040.2152500000002,
+          "lower_bound": -842.1841250000003,
+          "upper_bound": 3318.6768750000006,
+          "train_clipped_count": 69,
+          "test_clipped_count": 5
+        }
+      },
+      "total_train_clipped": 470,
+      "total_test_clipped": 105,
+      "completed_at": "2026-07-27T01:31:38.911050"
+    },
+    "scaling": {
+      "status": "completed",
+      "method": "StandardScaler",
+      "fit_source": "training_only",
+      "applied_to": [
+        "training",
+        "testing"
+      ],
+      "completed_at": "2026-07-27T01:31:38.911050"
     }
   }
 }
