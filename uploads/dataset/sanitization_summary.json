@@ -1,0 +1,11 @@
+{
+  "original_row_count": 5700,
+  "excluded_alum_lime_row_count": 190,
+  "ambiguous_chemical_row_count": 315,
+  "final_active_row_count": 5195,
+  "removed_column_names": [
+    "Unnamed: 0",
+    "Dosis Alum (ppm)",
+    "Dosis Lime (ppm)"
+  ]
+}

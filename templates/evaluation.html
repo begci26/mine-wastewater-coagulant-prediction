@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+
+{% block title %}Evaluasi & Perbandingan Model Regresi{% endblock %}
+
+{% block breadcrumb %}Evaluasi Model{% endblock %}
+
+{% block extra_css %}
+<style>
+    .eval-card {
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+        background-color: #fff;
+    }
+    .kpi-icon-lg {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .badge-rank {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Judul Halaman -->
+    <div class="col-12 mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">Evaluasi & Perbandingan Model</h1>
+                <p class="text-muted small">Membedakan metrik training, testing, residual diagnostik, dan Time Series Cross-Validation with 5 splits.</p>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-success dropdown-toggle fw-bold shadow-sm" type="button" id="exportMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export me-1"></i>Ekspor Hasil Evaluasi
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportMenu">
+                    <li><a class="dropdown-item small" href="{{ url_for('evaluation.download', file_type='xlsx') }}"><i class="fas fa-file-excel text-success me-2"></i>Unduh Excel (.xlsx)</a></li>
+                    <li><a class="dropdown-item small" href="{{ url_for('evaluation.download', file_type='csv') }}"><i class="fas fa-file-csv text-primary me-2"></i>Unduh CSV (.csv)</a></li>
+                    <li><a class="dropdown-item small" href="{{ url_for('evaluation.download', file_type='pdf') }}"><i class="fas fa-file-pdf text-danger me-2"></i>Unduh PDF Laporan (.pdf)</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- RINGKASAN HASIL (KPI CARDS) -->
+    <div class="col-12 mb-4">
+        <div class="row g-3">
+            <div class="col-md-4 col-lg-2">
+                <div class="card eval-card h-100">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="kpi-icon-lg bg-primary-light text-primary me-3"><i class="fas fa-cubes"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Jumlah Model</div>
+                            <h5 class="fw-bold text-dark m-0">3 Model</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">Lengkap dievaluasi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="card eval-card h-100">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="kpi-icon-lg bg-success-light text-success me-3"><i class="fas fa-trophy"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Model Terbaik</div>
+                            <h5 class="fw-bold text-success m-0">{{ best_model }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">Skor RMSE terkecil</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="card eval-card h-100">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="kpi-icon-lg bg-info-light text-info me-3"><i class="fas fa-percentage"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">R² Tertinggi</div>
+                            <h5 class="fw-bold text-info m-0">{{ best_metrics.r2 }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">Variansi terjelaskan</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="card eval-card h-100">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="kpi-icon-lg bg-warning-light text-warning me-3"><i class="fas fa-compress-arrows-alt"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">RMSE Terbaik</div>
+                            <h5 class="fw-bold text-warning m-0">{{ best_metrics.rmse }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">ppm error kuadrat</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="card eval-card h-100">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="kpi-icon-lg bg-danger-light text-danger me-3"><i class="fas fa-bullseye"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">MAE Terbaik</div>
+                            <h5 class="fw-bold text-danger m-0">{{ best_metrics.mae }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">ppm error rata-rata</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="card eval-card h-100">
+                    <div class="card-body d-flex align-items-center p-3">
+                        <div class="kpi-icon-lg bg-secondary-light text-secondary me-3"><i class="fas fa-calendar-check"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Tanggal Evaluasi</div>
+                            <h6 class="fw-bold text-dark m-0" style="font-size: 0.8rem;">{{ eval_date }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABEL PERBANDINGAN MODEL & LEADERBOARD -->
+    <div class="col-lg-6 mb-4">
+        <!-- Tabel Perbandingan Model -->
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i>Tabel Komparasi Performa Model</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom text-center m-0 small" style="font-size: 0.75rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nama Model</th>
+                                <th>Train MAE/RMSE/R²</th>
+                                <th>Test MAE/RMSE/R²</th>
+                                <th>R² Gap</th>
+                                <th>Cross Validation</th>
+                                <th>Durasi Training</th>
+                                <th>Durasi Prediksi</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in sorted_models %}
+                            <tr class="{% if m.name == best_model %}table-primary-light fw-bold{% endif %}">
+                                <td class="text-start ps-3">{{ m.name }}</td>
+                                <td>{{ '%.4f'|format(m.train_mae) }} / {{ '%.4f'|format(m.train_rmse) }} / {{ '%.4f'|format(m.train_r2) }}</td>
+                                <td class="text-primary">{{ '%.4f'|format(m.mae) }} / {{ '%.4f'|format(m.rmse) }} / {{ '%.4f'|format(m.r2) }}</td>
+                                <td>{{ '%.4f'|format(m.r2_gap) }}</td>
+                                <td>{{ m.cv }}</td>
+                                <td>{{ m.duration }}s</td>
+                                <td>{{ m.pred_time }}s</td>
+                                <td>
+                                    {% if m.name == best_model %}
+                                    <span class="badge bg-primary">Model Terbaik</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Pembanding</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <!-- Leaderboard Model -->
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-medal text-warning me-2"></i>Leaderboard Peringkat Keakuratan</h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                {% set medal_icons = ['🥇', '🥈', '🥉'] %}
+                {% for m in sorted_models %}
+                <div class="d-flex align-items-center border rounded p-3 mb-2 {% if loop.index == 1 %}bg-light-blue border-primary{% else %}bg-white{% endif %}">
+                    <div class="fs-2 me-4">{{ medal_icons[loop.index - 1] }}</div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 {% if loop.index == 1 %}text-primary{% else %}text-dark{% endif %}">Peringkat {{ loop.index }}: {{ m.name }}</h6>
+                        <p class="m-0 small text-muted">
+                            {% if loop.index == 1 %}
+                            Model dipilih berdasarkan test RMSE terendah ({{ m.rmse }} ppm), dengan test MAE dan test R² sebagai tie-break.
+                            {% elif loop.index == 2 %}
+                            Peringkat kedua dengan nilai R² yang kompetitif ({{ m.r2 }}), namun nilai error residual sedikit lebih tinggi dibanding peringkat pertama.
+                            {% else %}
+                            Model baseline sederhana. Memiliki performa terendah karena tidak dapat memodelkan sifat non-linier dari data air tambang.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- VISUALISASI PERBANDINGAN METRIK -->
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-bar text-primary me-2"></i>Grafik Perbandingan Metrik Pengujian</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold text-dark mb-2 text-center">Root Mean Squared Error (RMSE)</h6>
+                            <div id="chart-rmse" style="min-height: 250px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold text-dark mb-2 text-center">Mean Absolute Error (MAE)</h6>
+                            <div id="chart-mae" style="min-height: 250px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold text-dark mb-2 text-center">Koefisien Determinasi (R²)</h6>
+                            <div id="chart-r2" style="min-height: 250px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold text-dark mb-2 text-center">Durasi Pelatihan Model (Detik)</h6>
+                            <div id="chart-duration" style="min-height: 230px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold text-dark mb-2 text-center">Durasi Prediksi Uji (Detik)</h6>
+                            <div id="chart-pred-duration" style="min-height: 230px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANALISIS RESIDUAL & SCATTER PLOT AKTUAL VS PREDIKSI -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-line text-primary me-2"></i>Scatter Plot Aktual vs Prediksi</h5>
+            </div>
+            <div class="card-body">
+                <div id="chart-scatter" style="min-height: 320px;"></div>
+                <div class="alert alert-secondary border-0 small text-dark mt-3 mb-0">
+                    <strong>Interpretasi Scatter Plot:</strong> Diagram memetakan dosis aktual terhadap prediksi model <strong>{{ best_model }}</strong>. Kedekatan titik ke garis ideal merupakan indikator diagnostik akurasi pada periode testing, bukan bukti performa sempurna di semua kondisi.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-area text-primary me-2"></i>Residual Plot & Statistik Kesalahan</h5>
+            </div>
+            <div class="card-body">
+                <div id="chart-residual" style="min-height: 320px;"></div>
+                <div class="table-responsive mt-3 mb-0">
+                    <table class="table table-bordered table-sm text-center small m-0" style="font-size: 0.8rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Metrik Residual</th>
+                                <th>Nilai Kesalahan (ppm)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-semibold text-start ps-3">Nilai Minimum Residual</td>
+                                <td>{{ res_min }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold text-start ps-3">Nilai Maksimum Residual</td>
+                                <td>{{ res_max }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold text-start ps-3">Rata-rata Kesalahan (Bias)</td>
+                                <td class="fw-bold text-success">{{ res_mean }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold text-start ps-3">Standar Deviasi Residual</td>
+                                <td>{{ res_std }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DISTRIBUSI RESIDUAL -->
+    <div class="col-12 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-bar text-primary me-2"></i>Histogram Distribusi Normalitas Residual</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <div id="chart-res-hist" style="min-height: 300px;"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="border rounded p-3 bg-light text-dark small" style="line-height: 1.7;">
+                            <h6 class="fw-bold text-primary mb-2"><i class="fas fa-info-circle me-1"></i>Analisis Kelayakan Uji Asumsi Residual:</h6>
+                            <p class="mb-2">
+                                Grafik histogram di samping memetakan distribusi frekuensi kesalahan prediksi model terbaik (Residual).
+                            </p>
+                            <p class="mb-2">
+                                Sesuai dengan teori statistika regresi, model yang baik harus menghasilkan residual yang <strong>berdistribusi normal dengan rata-rata mendekati nol</strong>. Hal ini dibuktikan secara visual oleh kurva lonceng simetris pada histogram di samping.
+                            </p>
+                            <p class="m-0 text-muted">
+                                Bentuk histogram merupakan indikator diagnostik. Inspeksi visual saja tidak membuktikan normalitas, homoskedastisitas, atau ketiadaan bias sistemik.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERPRETASI & KESIMPULAN OTOMATIS -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm" style="border-left: 4px solid var(--primary-blue-light) !important;">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-primary"><i class="fas fa-lightbulb text-warning me-2"></i>Naratif Pembahasan & Kesimpulan Tesis</h5>
+            </div>
+            <div class="card-body text-dark small" style="line-height: 1.8;">
+                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-check-circle text-success me-2"></i>Interpretasi Hasil Evaluasi (Naskah BAB IV Tesis):</h6>
+                <ul class="ps-3 mb-4 text-muted">
+                    {% for item in interpretations %}
+                    <li>{{ item | safe }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-check-circle text-success me-2"></i>Kesimpulan Rekomendasi Akhir Penelitian:</h6>
+                <p class="text-dark bg-light p-3 border rounded font-monospace fw-bold m-0" style="font-size: 0.85rem;">
+                    "{{ conclusion | safe }}"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL PENJELASAN ILMIAH -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold text-dark m-0"><i class="fas fa-graduation-cap text-primary me-2"></i>Penjelasan Proses Ilmiah Evaluasi</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-muted small g-3">
+                    <div class="col-md-6 border-end">
+                        <h6 class="fw-bold text-dark"><i class="fas fa-brain text-primary me-2"></i>Apa itu Evaluasi Model?</h6>
+                        <p class="mb-3">
+                            Evaluasi model merupakan tahap menguji kemampuan generalisasi algoritma regresi yang telah dilatih menggunakan data uji independen yang tidak pernah dipakai selama proses fitting model.
+                        </p>
+
+                        <h6 class="fw-bold text-dark"><i class="fas fa-compress-arrows-alt text-success me-2"></i>Mengapa Menggunakan MAE & RMSE?</h6>
+                        <p class="mb-3">
+                            <strong>Mean Absolute Error (MAE)</strong> mengukur rata-rata magnitudo kesalahan absolut prediksi tanpa mempertimbangkan arah kesalahan. Sementara itu, <strong>Root Mean Squared Error (RMSE)</strong> memberikan bobot penalti kuadrat bagi kesalahan prediksi yang besar. Kombinasi keduanya mendeteksi apakah model memiliki kesalahan ekstrem yang berbahaya bagi kestabilan pH IPAL.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-dark"><i class="fas fa-chart-line text-info me-2"></i>Mengapa Menggunakan Koefisien Determinasi (R²)?</h6>
+                        <p class="mb-3">
+                            <strong>R² Score (Coefficient of Determination)</strong> mewakili proporsi variansi variabel dependen (Dosis CL-80) yang dapat diprediksi secara tepat oleh variabel-variabel masukan kualitas air. R² mendekati 1.0 membuktikan model memiliki kecocokan yang sangat tinggi.
+                        </p>
+
+                        <h6 class="fw-bold text-dark"><i class="fas fa-check-circle text-primary me-2"></i>Mengapa Melakukan Perbandingan Model Komparatif?</h6>
+                        <p class="m-0">
+                            Perbandingan tiga model membuktikan secara empiris keunggulan algoritma boosting non-linear dibanding model linear konvensional, memberikan kontribusi akademis kuat pada naskah tesis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const chartsData = {{ charts | tojson }};
+        
+        const layoutBase = {
+            margin: { l: 40, r: 20, t: 10, b: 40 },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: { gridcolor: '#f3f4f6' },
+            yaxis: { gridcolor: '#f3f4f6' }
+        };
+        
+        // 1. Plot RMSE
+        Plotly.newPlot('chart-rmse', chartsData.rmse.data, { ...layoutBase, margin: {l:30, r:10, t:10, b:30} }, {responsive: true});
+        
+        // 2. Plot MAE
+        Plotly.newPlot('chart-mae', chartsData.mae.data, { ...layoutBase, margin: {l:30, r:10, t:10, b:30} }, {responsive: true});
+        
+        // 3. Plot R2
+        Plotly.newPlot('chart-r2', chartsData.r2.data, { ...layoutBase, margin: {l:30, r:10, t:10, b:30} }, {responsive: true});
+        
+        // 4. Plot Durasi
+        Plotly.newPlot('chart-duration', chartsData.dur.data, { ...layoutBase, margin: {l:30, r:10, t:10, b:30} }, {responsive: true});
+        
+        // 5. Plot Durasi Prediksi
+        Plotly.newPlot('chart-pred-duration', chartsData.pred_dur.data, { ...layoutBase, margin: {l:30, r:10, t:10, b:30} }, {responsive: true});
+        
+        // 6. Scatter Plot Aktual vs Prediksi
+        Plotly.newPlot('chart-scatter', chartsData.scatter.data, layoutBase, {responsive: true});
+        
+        // 7. Residual Plot
+        Plotly.newPlot('chart-residual', chartsData.residual.data, layoutBase, {responsive: true});
+        
+        // 8. Histogram Residual
+        Plotly.newPlot('chart-res-hist', chartsData.res_hist.data, layoutBase, {responsive: true});
+    });
+</script>
+{% endblock %}

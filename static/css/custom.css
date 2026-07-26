@@ -1,0 +1,254 @@
+/* 
+ * Custom CSS Stylesheet
+ * Coagulant Dosage Predictor - White, Blue & Gray Palette
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-blue: #1e40af;
+    --primary-blue-light: #3b82f6;
+    --primary-blue-hover: #1d4ed8;
+    --bg-gray: #f8fafc;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+    --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --card-shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --border-radius-sm: 8px;
+    --border-radius-md: 12px;
+    --border-radius-lg: 16px;
+    --font-family: 'Inter', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-gray);
+    color: var(--text-dark);
+}
+
+/* Card Styling Overrides */
+.card {
+    border: none;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--card-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: #ffffff;
+    margin-bottom: 1.5rem;
+}
+
+.card:hover {
+    box-shadow: var(--card-shadow-hover);
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 1.25rem 1.5rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    border-top-left-radius: var(--border-radius-md) !important;
+    border-top-right-radius: var(--border-radius-md) !important;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Primary buttons style */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    font-weight: 500;
+    border-radius: var(--border-radius-sm);
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+    background-color: var(--primary-blue-hover) !important;
+    border-color: var(--primary-blue-hover) !important;
+    transform: translateY(-1px);
+}
+
+/* Custom Drag and Drop Upload Area */
+.upload-zone {
+    border: 2px dashed #cbd5e1;
+    border-radius: var(--border-radius-md);
+    background-color: #ffffff;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--primary-blue-light);
+    background-color: #f0f7ff;
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--primary-blue-light);
+    margin-bottom: 1rem;
+}
+
+/* Loading Overlay Styling */
+.loading-overlay {
+    transition: opacity 0.3s ease;
+}
+
+/* Custom Table Styles */
+.table-custom {
+    border-radius: var(--border-radius-sm);
+    overflow: hidden;
+}
+
+.table-custom thead th {
+    background-color: #f1f5f9;
+    color: var(--text-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #cbd5e1;
+    padding: 1rem;
+}
+
+.table-custom tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.table-custom tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Sidebar Custom Overrides for AdminLTE style layout */
+.main-sidebar {
+    background-color: #0f172a !important; /* Deep dark navy slate gray */
+}
+
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+.sidebar-light-primary .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: var(--primary-blue) !important;
+    color: #ffffff !important;
+}
+
+.nav-sidebar .nav-link {
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 0.25rem;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+}
+
+.nav-sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.brand-link {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 1rem !important;
+}
+
+/* Prediction Output Highlighting Card */
+.prediction-result-card {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #bfdbfe;
+    border-radius: var(--border-radius-md);
+    padding: 2rem;
+    text-align: center;
+}
+
+.prediction-value {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    line-height: 1;
+    margin: 1rem 0;
+}
+
+/* Progress and Steps */
+.step-container {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.step-item {
+    text-align: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-item::after {
+    content: '';
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    width: 100%;
+    height: 3px;
+    background-color: #e2e8f0;
+    z-index: 1;
+}
+
+.step-item:last-child::after {
+    display: none;
+}
+
+.step-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    position: relative;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-icon {
+    background-color: var(--primary-blue);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+}
+
+.step-item.completed .step-icon {
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+.step-item.completed::after {
+    background-color: #10b981;
+}
+
+/* Layout spacing */
+.content-wrapper {
+    background-color: var(--bg-gray);
+    padding: 1.5rem;
+}
+
+/* Custom error page styled */
+.error-page-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-gray);
+}
+.error-card {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    padding: 2.5rem;
+}
+.error-icon {
+    font-size: 5rem;
+    color: #ef4444;
+    margin-bottom: 1.5rem;
+}

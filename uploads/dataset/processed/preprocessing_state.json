@@ -1,0 +1,76 @@
+{
+  "initial_shape": [
+    5195,
+    9
+  ],
+  "current_shape": [
+    2531,
+    16
+  ],
+  "sanitization": {
+    "original_row_count": 5700,
+    "excluded_alum_lime_row_count": 190,
+    "ambiguous_chemical_row_count": 315,
+    "final_active_row_count": 5195
+  },
+  "cleaning_applied": true,
+  "cleaning_removed_count": 2661,
+  "cleaning_message": "Target/rentang dibersihkan, timestamp dibentuk, data diurutkan kronologis, duplikat dihapus, lalu lag dan fitur turunan dibuat.",
+  "type_conversion_errors": [
+    "Inlet pH: 2 nilai tidak dapat dikonversi"
+  ],
+  "missing_checked": false,
+  "missing_stats": {},
+  "missing_handled": false,
+  "missing_strategy": "training_median_only",
+  "missing_message": null,
+  "missing_handled_count": 0,
+  "duplicates_checked": true,
+  "duplicates_count": 0,
+  "duplicates_handled": true,
+  "duplicates_removed_count": 0,
+  "outliers_detected": false,
+  "outliers_stats": {},
+  "outliers_count": 0,
+  "outliers_handled": false,
+  "outliers_strategy": "train_fitted_winsorization",
+  "outliers_message": null,
+  "outliers_handled_count": 0,
+  "feature_engineering_applied": true,
+  "feature_engineering_message": "T1/T2/T3 dibuat dari tiga observasi sebelumnya; Efisiensi_TSS, Delta_pH, dan Beban_TSS dibuat tanpa fitur rasio kimia.",
+  "feature_engineering_validation": {
+    "Inlet TSS (mg/L)": true,
+    "Inlet pH": true,
+    "Outlet TSS (mg/L)": true,
+    "Outlet pH": true,
+    "Inlet Disch (m3/s)": true,
+    "Kolom T1": true,
+    "Kolom T2": true,
+    "Kolom T3": true,
+    "Efisiensi_TSS": true,
+    "Delta_pH": true,
+    "Beban_TSS": true
+  },
+  "lag_rows_deleted": 3,
+  "scaler_applied": false,
+  "scaler_strategy": "standard",
+  "scaler_message": null,
+  "split": false,
+  "split_ratio": 20,
+  "split_method": "chronological_80_20",
+  "train_shape": null,
+  "test_shape": null,
+  "comparison": {},
+  "cleaning_summary": {
+    "preprocessing_input_rows": 5195,
+    "invalid_target_rows_removed": 2639,
+    "inlet_tss_over_2000_rows_removed": 22,
+    "invalid_timestamp_rows_removed": 0,
+    "duplicate_rows_removed": 0,
+    "lag_incomplete_rows_removed": 3,
+    "final_row_count": 2531,
+    "type_conversion_warnings": [
+      "Inlet pH: 2 nilai tidak dapat dikonversi"
+    ]
+  }
+}

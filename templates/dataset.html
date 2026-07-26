@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+
+{% block title %}Dataset Penelitian{% endblock %}
+
+{% block breadcrumb %}Dataset{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- SECTION 1: Judul Halaman -->
+    <div class="col-12 mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold">Dataset dan Prapemrosesan Data</h1>
+                <p class="text-muted">Kelola dataset penelitian dan tinjau struktur parameternya secara komprehensif.</p>
+            </div>
+            {% if is_uploaded %}
+            <form action="{{ url_for('dataset.reset') }}" method="POST" onsubmit="showLoading('Membersihkan dataset aktif...');">
+                <button type="submit" class="btn btn-danger shadow-sm">
+                    <i class="fas fa-trash-alt me-2"></i>Bersihkan Dataset Aktif
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SECTION 2: Tujuan Halaman -->
+    <div class="col-12 mb-3">
+        <div class="card border-0 shadow-sm bg-light-blue" style="border-left: 4px solid var(--primary-blue) !important; background-color: #f0f7ff;">
+            <div class="card-body py-3">
+                <h6 class="fw-bold text-primary mb-1"><i class="fas fa-info-circle me-2"></i>Tujuan Halaman</h6>
+                <p class="m-0 text-dark small">Halaman ini digunakan untuk mengunggah dataset penelitian, memvalidasi struktur parameter kualitas air, memeriksa statistik ringkasan deskriptif, serta mempersiapkan dataset untuk proses prapemrosesan data.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: Penjelasan Halaman -->
+    <div class="col-12 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <h6 class="fw-bold text-secondary mb-1"><i class="fas fa-microscope me-2"></i>Penjelasan Ilmiah Data Kualitas Air Tambang</h6>
+                <p class="m-0 text-muted small">Optimasi proses koagulasi menuntut dataset dengan kualitas penulisan tinggi. Air limbah tambang mengandung partikel tersuspensi halus (TSS) dan kontaminan terlarut seperti Besi (Fe) dan Mangan (Mn) yang memiliki sifat hubungan korelasional non-linier kompleks dengan dosis penetral koagulan. Visualisasi statistik dasar dan tipe data membantu memetakan pola sebaran awal data operasional di lapangan secara presisi sebelum diaplikasikan pada model machine learning regresi.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: Panduan Penggunaan -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-dark"><i class="fas fa-route text-primary me-2"></i>Panduan Memverifikasi Dataset</h6>
+            </div>
+            <div class="card-body py-3">
+                <ol class="m-0 ps-3 small text-muted">
+                    <li>Gunakan panel **Drag & Drop** di bawah untuk menyeret file CSV atau XLSX dataset atau klik tombol cari untuk memilih berkas.</li>
+                    <li>Sistem secara otomatis memverifikasi ketersediaan target kolom wajib `Dosis CL-80 (ppm)` beserta validitas format.</li>
+                    <li>Amati **Informasi Metadata Dataset** untuk memeriksa ukuran file, baris, dan duplikasi baris.</li>
+                    <li>Tinjau pratinjau **10 Data Pertama** dan **10 Data Terakhir** menggunakan navigasi DataTables yang interaktif.</li>
+                    <li>Periksa tipe data, jumlah nilai kosong, dan nilai unik pada tabel informasi tipe data.</li>
+                    <li>Pelajari nilai rata-rata, kuartil (Q1, Q2/Median, Q3), deviasi standar, dan rentang min-maks pada tabel **Statistik Deskriptif**.</li>
+                    <li>Lanjutkan ke menu **Prapemrosesan Data** di sidebar kiri setelah data dinyatakan terverifikasi.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: Area Proses (Unggahan File) -->
+    {% if not is_uploaded %}
+    <div class="col-lg-8 mx-auto mb-4">
+        <div class="card card-outline card-primary shadow-lg border-0">
+            <div class="card-body p-5">
+                <form id="upload-form" action="{{ url_for('dataset.upload') }}" method="POST" enctype="multipart/form-data">
+                    <div class="upload-zone" id="drop-zone">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h5 class="fw-semibold">Pilih File CSV / XLSX atau Seret file ke area ini</h5>
+                        <p class="text-muted small">Maksimum ukuran file dapat diatur melalui konfigurasi</p>
+                        <input type="file" name="dataset_file" id="file-input" class="d-none" accept=".csv,.xlsx">
+                        <div class="mt-3 d-none" id="file-details">
+                            <span class="badge bg-primary px-3 py-2 fs-6" id="file-name">berkas.csv / berkas.xlsx</span>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" id="submit-btn" class="btn btn-primary btn-lg px-5 shadow-sm d-none" onclick="showLoading('Mengunggah dan memvalidasi berkas dataset...');">
+                            <i class="fas fa-check me-2"></i>Mulai Proses Dataset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SECTION 6: Area Hasil -->
+    {% if is_uploaded and summary %}
+    {% if summary.sanitization %}
+    <div class="col-12 mb-3">
+        <div class="alert alert-info mb-0 small">
+            <strong>Ringkasan sanitasi:</strong>
+            {{ summary.sanitization.original_row_count }} baris asli;
+            {{ summary.sanitization.excluded_alum_lime_row_count }} baris dengan bahan kimia dikeluarkan;
+            {{ summary.sanitization.ambiguous_chemical_row_count }} baris kimia ambigu dikeluarkan;
+            {{ summary.sanitization.final_active_row_count }} baris menjadi dataset aktif.
+            Kolom dihapus: {{ summary.sanitization.removed_column_names | join(', ') if summary.sanitization.removed_column_names else 'tidak ada' }}.
+        </div>
+    </div>
+    {% endif %}
+    <div class="col-12">
+        
+        <!-- Baris Informasi Dataset -->
+        <div class="row g-3 mb-4">
+            <!-- Kartu Nama Berkas -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm text-center h-100 py-2">
+                    <div class="card-body p-2 d-flex flex-column justify-content-between">
+                        <div class="text-muted small fw-semibold">Nama File</div>
+                        <div class="h5 fw-bold text-dark my-2 text-truncate px-2" title="{{ summary.filename }}">{{ summary.filename }}</div>
+                        <div class="text-muted small" style="font-size: 0.7rem;">Ukuran: <strong>{{ summary.filesize }}</strong></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Kartu Jumlah Baris -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm text-center h-100 py-2">
+                    <div class="card-body p-2 d-flex flex-column justify-content-between">
+                        <div class="text-muted small fw-semibold">Jumlah Baris</div>
+                        <div class="h3 fw-bold text-primary my-2">{{ summary.rows }}</div>
+                        <div class="text-muted small" style="font-size: 0.7rem;">Menampilkan jumlah baris data yang digunakan dalam penelitian.</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Kartu Jumlah Kolom -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm text-center h-100 py-2">
+                    <div class="card-body p-2 d-flex flex-column justify-content-between">
+                        <div class="text-muted small fw-semibold">Jumlah Kolom</div>
+                        <div class="h3 fw-bold text-primary my-2">{{ summary.columns_count }}</div>
+                        <div class="text-muted small" style="font-size: 0.7rem;">Variabel numerik: <strong>{{ summary.numeric_vars_count }}</strong> | Kategori: <strong>{{ summary.categorical_vars_count }}</strong></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Kartu Duplikat & Kosong -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm text-center h-100 py-2">
+                    <div class="card-body p-2 d-flex flex-column justify-content-between">
+                        <div class="text-muted small fw-semibold">Nilai Kosong & Duplikat</div>
+                        <div class="h5 fw-bold text-warning my-2">Kosong: {{ summary.total_missing }} | Duplikat: {{ summary.duplicate_count }}</div>
+                        <div class="text-muted small" style="font-size: 0.7rem;">Ringkasan nilai kosong dan record baris duplikat yang terdeteksi.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Penjelasan Informasi Dataset -->
+        <div class="col-12 mb-4 px-0">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-2 small text-muted">
+                    <strong>Penjelasan Informasi:</strong> Informasi dataset memberikan gambaran awal mengenai kualitas data yang akan digunakan dalam proses Machine Learning.
+                </div>
+            </div>
+        </div>
+
+        <!-- Pratinjau 10 Data Pertama & 10 Data Terakhir -->
+        <div class="row">
+            <!-- 10 Data Pertama -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-arrow-down text-primary me-2"></i>10 Data Pertama (Head)</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <table id="head-preview-table" class="table table-hover table-striped table-bordered table-custom display nowrap w-100">
+                            <thead>
+                                <tr>
+                                    {% for col in summary.preview_cols %}
+                                    <th>{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in summary.head_data %}
+                                <tr>
+                                    {% for val in row %}
+                                    <td>{{ val }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10 Data Terakhir -->
+            <div class="col-lg-6 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-arrow-up text-primary me-2"></i>10 Data Terakhir (Tail)</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <table id="tail-preview-table" class="table table-hover table-striped table-bordered table-custom display nowrap w-100">
+                            <thead>
+                                <tr>
+                                    {% for col in summary.preview_cols %}
+                                    <th>{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in summary.tail_data %}
+                                <tr>
+                                    {% for val in row %}
+                                    <td>{{ val }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabel Tipe Data & Informasi Unik -->
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-info-circle text-primary me-2"></i>Informasi Tipe Data & Keunikan Variabel</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-custom m-0 text-center">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Variabel</th>
+                                        <th>Tipe Data</th>
+                                        <th>Jumlah Nilai Kosong</th>
+                                        <th>Jumlah Nilai Unik</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for col in summary.columns_info %}
+                                    <tr>
+                                        <td class="fw-semibold text-start ps-4">{{ col.name }}</td>
+                                        <td><span class="badge bg-secondary px-3 py-1">{{ col.type }}</span></td>
+                                        <td>
+                                            {% if col.missing_count > 0 %}
+                                            <span class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-1"></i>{{ col.missing_count }}</span>
+                                            {% else %}
+                                            <span class="text-success"><i class="fas fa-check-circle me-1"></i>0</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><strong>{{ col.unique_count }}</strong></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistik Deskriptif -->
+        <div class="row">
+            <div class="col-lg-12 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-calculator text-primary me-2"></i>Statistik Deskriptif Variabel Numerik</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-custom m-0 text-center">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Variabel</th>
+                                        <th>Jumlah Data</th>
+                                        <th>Nilai Minimum</th>
+                                        <th>Nilai Maksimum</th>
+                                        <th>Rata-rata (Mean)</th>
+                                        <th>Nilai Tengah (Median)</th>
+                                        <th>Standar Deviasi</th>
+                                        <th>Kuartil Pertama (Q1)</th>
+                                        <th>Kuartil Ketiga (Q3)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in summary.stats %}
+                                    <tr>
+                                        <td class="fw-semibold text-start ps-4">{{ stat.name }}</td>
+                                        <td>{{ stat.count }}</td>
+                                        <td>{{ stat.min }}</td>
+                                        <td>{{ stat.max }}</td>
+                                        <td>{{ stat.mean }}</td>
+                                        <td class="table-primary fw-bold text-primary">{{ stat.median }}</td>
+                                        <td>{{ stat.std }}</td>
+                                        <td>{{ stat.q1 }}</td>
+                                        <td>{{ stat.q3 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Penjelasan Statistik Deskriptif -->
+        <div class="col-12 mb-4 px-0">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-2 small text-muted">
+                    <strong>Penjelasan Statistik:</strong> Statistik deskriptif digunakan untuk memahami karakteristik dasar setiap variabel sebelum dilakukan proses pemodelan.
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 7: Interpretasi Hasil -->
+        <div class="col-12 mb-4 px-0">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body py-3">
+                    <h6 class="fw-bold text-dark mb-1"><i class="fas fa-chart-pie me-2"></i>Interpretasi Hasil Karakteristik Data</h6>
+                    <p class="m-0 text-muted small"><strong>Interpretasi:</strong> Dataset yang berhasil dimuat memiliki total {{ summary.rows }} baris sampel kualitas air tambang. Terdapat {{ summary.numeric_vars_count }} variabel numerik dan {{ summary.categorical_vars_count }} variabel kategorik. Sebaran data menunjukkan derajat keasaman inlet air tambang dominan berada pada kondisi asam, yang memerlukan estimasi dosis koagulan secara presisi. Total nilai kosong terdeteksi sebanyak {{ summary.total_missing }} sel.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 8: Kesimpulan Otomatis -->
+        <div class="col-12 mb-4 px-0">
+            <div class="card border-0 shadow-sm" style="border-left: 4px solid var(--primary-blue-light) !important;">
+                <div class="card-body py-3">
+                    <h6 class="fw-bold text-primary mb-1"><i class="fas fa-clipboard-check me-2"></i>Kesimpulan Data Awal</h6>
+                    <p class="m-0 text-dark small">
+                        <strong>Kesimpulan:</strong> Berkas dataset <code>{{ summary.filename }}</code> dinyatakan <strong>valid</strong> secara struktur kolom. 
+                        {% if summary.total_missing > 0 or summary.duplicate_count > 0 %}
+                            Ditemukan masalah pada dataset berupa <strong>{{ summary.total_missing }} nilai kosong</strong> dan <strong>{{ summary.duplicate_count }} baris duplikat</strong>. Anda wajib memproses data ini pada menu <strong>Prapemrosesan Data</strong> sebelum melakukan analisis.
+                        {% else %}
+                            Dataset bersih dari nilai kosong dan baris duplikat. Anda dapat melanjutkan ke tahapan <strong>Prapemrosesan Data</strong> untuk melakukan konfigurasi pembagian data latih/uji.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not is_uploaded %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileDetails = document.getElementById('file-details');
+        const fileNameSpan = document.getElementById('file-name');
+        const submitBtn = document.getElementById('submit-btn');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                if (file.name.toLowerCase().endsWith('.csv') || file.name.toLowerCase().endsWith('.xlsx')) {
+                    fileNameSpan.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    fileDetails.classList.remove('d-none');
+                    submitBtn.classList.remove('d-none');
+                } else {
+                    toast.show("Format Salah", "Silakan unggah berkas bertipe CSV atau XLSX.", "danger");
+                    fileInput.value = "";
+                    fileDetails.classList.add('d-none');
+                    submitBtn.classList.add('d-none');
+                }
+            }
+        }
+    });
+</script>
+{% else %}
+<!-- DataTables JS & Responsive plugins -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#head-preview-table').DataTable({
+            responsive: true,
+            scrollX: true,
+            pageLength: 5,
+            lengthMenu: [5, 10],
+            searching: false,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json'
+            }
+        });
+        $('#tail-preview-table').DataTable({
+            responsive: true,
+            scrollX: true,
+            pageLength: 5,
+            lengthMenu: [5, 10],
+            searching: false,
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/id.json'
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Tentang Penelitian Tesis{% endblock %}
+
+{% block breadcrumb %}Tentang{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- SECTION 1: Judul Halaman -->
+    <div class="col-12 mb-3">
+        <h1 class="h3 mb-0 text-gray-800 fw-bold">Tentang</h1>
+        <p class="text-muted">Konteks ilmiah, deskripsi variabel, dan alur metodologi penelitian tesis.</p>
+    </div>
+
+    <!-- SECTION 2: Tujuan Halaman -->
+    <div class="col-12 mb-3">
+        <div class="card border-0 shadow-sm bg-light-blue" style="border-left: 4px solid var(--primary-blue) !important; background-color: #f0f7ff;">
+            <div class="card-body py-3">
+                <h6 class="fw-bold text-primary mb-1"><i class="fas fa-info-circle me-2"></i>Tujuan Halaman</h6>
+                <p class="m-0 text-dark small">Halaman ini digunakan untuk memberikan informasi detail mengenai latar belakang akademis penelitian tesis, pemetaan teori variabel kontaminan, penjelasan algoritma regresi pembanding, serta dokumentasi metodologi pengerjaan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: Penjelasan Halaman -->
+    <div class="col-12 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <h6 class="fw-bold text-secondary mb-1"><i class="fas fa-microscope me-2"></i>Penjelasan Ilmiah Latar Belakang Tesis</h6>
+                <p class="m-0 text-muted small">Air Asam Tambang (AAT) atau Acid Mine Drainage merupakan limbah cair industri pertambangan yang ditandai dengan pH sangat rendah dan konsentrasi logam berat terlarut yang tinggi. Penanganan limbah ini umumnya menggunakan metode netralisasi dan koagulasi-flokulasi. Penentuan dosis koagulan secara manual di lapangan sering kali tidak akurat, menyebabkan terjadinya kelebihan pemakaian (overdosing) yang merusak ekosistem atau kekurangan pemakaian (underdosing) yang gagal mengendapkan logam berat. Tesis ini mengajukan model regresi berbasis Machine Learning untuk melakukan optimasi prediksi dosis secara real-time dan akurat berdasarkan parameter kimia-fisik air limbah tambang.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: Panduan Penggunaan -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-dark"><i class="fas fa-route text-primary me-2"></i>Panduan Memahami Metodologi Penelitian</h6>
+            </div>
+            <div class="card-body py-3">
+                <ol class="m-0 ps-3 small text-muted">
+                    <li>Pelajari **Penjelasan Variabel Parameter Air** pada tabel di bawah untuk mengetahui kegunaan masing-masing kontaminan input.</li>
+                    <li>Tinjau penjelasan **Algoritma Regresi Pembanding** untuk memahami dasar teori komputasi model Linear, XGBoost, dan LightGBM.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 6: Area Hasil -->
+    <div class="col-lg-12 mb-4">
+        <!-- Parameter list card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-table text-primary me-2"></i>Penjelasan Variabel Parameter Air Tambang</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom m-0 text-start">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Satuan</th>
+                                <th>Deskripsi Ilmiah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">Inlet TSS (mg/L)</td>
+                                <td>mg/L</td>
+                                <td>Kadar padatan tersuspensi (Total Suspended Solids) air tambang yang masuk.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Inlet pH</td>
+                                <td>-</td>
+                                <td>Derajat keasaman air limbah tambang yang masuk.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Outlet TSS (mg/L)</td>
+                                <td>mg/L</td>
+                                <td>Kadar padatan tersuspensi target setelah dinetralkan.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Outlet pH</td>
+                                <td>-</td>
+                                <td>Derajat keasaman target air olahan keluar.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Inlet Disch (m3/s)</td>
+                                <td>m³/s</td>
+                                <td>Debit laju alir volume air limbah masuk ke settling pond IPAL.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Kolom T1</td>
+                                <td>ppm</td>
+                                <td>Dosis CL-80 satu observasi sebelumnya ($t-1$).</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Kolom T2</td>
+                                <td>ppm</td>
+                                <td>Dosis CL-80 dua observasi sebelumnya ($t-2$).</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Kolom T3</td>
+                                <td>ppm</td>
+                                <td>Dosis CL-80 tiga observasi sebelumnya ($t-3$).</td>
+                            </tr>
+                            <tr class="table-success text-success fw-semibold">
+                                <td class="fw-bold">Dosis CL-80 (ppm)</td>
+                                <td>ppm</td>
+                                <td>Target Prediksi: Konsentrasi dosis optimal koagulan organik utama CL-80.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algoritma Regresi Pembanding -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-brain text-primary me-2"></i>Karakteristik Algoritma Regresi</h5>
+            </div>
+            <div class="card-body text-start small">
+                <div class="mb-3 border-bottom pb-2">
+                    <h6 class="fw-bold text-primary mb-1">Linear Regression</h6>
+                    <p class="text-muted m-0">Memodelkan hubungan linier parametrik antara fitur masukan dan target. Cepat namun tidak dapat memodelkan pola non-linier kompleks.</p>
+                </div>
+                <div class="mb-3 border-bottom pb-2">
+                    <h6 class="fw-bold text-primary mb-1">XGBoost Regressor</h6>
+                    <p class="text-muted m-0">Implementasi Extreme Gradient Boosting yang dioptimalkan dengan regularisasi L1/L2 untuk menekan overfitting.</p>
+                </div>
+                <div class="mb-0">
+                    <h6 class="fw-bold text-primary mb-1">LightGBM Regressor</h6>
+                    <p class="text-muted m-0">Model gradient boosting buatan Microsoft yang melatih pohon secara leaf-wise, menawarkan kecepatan tinggi dan memori rendah.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 7: Interpretasi Hasil -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body py-3">
+                <h6 class="fw-bold text-dark mb-1"><i class="fas fa-chart-pie me-2"></i>Interpretasi Metodologi Ilmiah</h6>
+                <p class="m-0 text-muted small"><strong>Interpretasi:</strong> Penjajaran ketiga algoritma regresi di atas bertujuan untuk melakukan perbandingan secara empiris. Model linier mewakili hubungan linier sederhana, sedangkan model berbasis pohon boosting (XGBoost, LightGBM) mewakili interaksi non-linier antar kontaminan. Evaluasi akhir memilih model dengan performa generalisasi terbaik.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 8: Kesimpulan Otomatis -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm" style="border-left: 4px solid var(--primary-blue-light) !important;">
+            <div class="card-body py-3">
+                <h6 class="fw-bold text-primary mb-1"><i class="fas fa-clipboard-check me-2"></i>Kesimpulan Tesis</h6>
+                <p class="m-0 text-dark small"><strong>Kesimpulan:</strong> Optimasi prediksi dosis koagulan menggunakan kecerdasan buatan terbukti secara ilmiah mampu meminimalkan human error, menekan konsumsi zat kimia koagulan secara efisien, serta menjamin air hasil olahan tambang selalu memenuhi baku mutu kelayakan lingkungan hidup.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

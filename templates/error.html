@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ error_code }} | Coagulant Dosage Optimizer</title>
+    <!-- Google Font: Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="error-page-container">
+    <div class="card error-card shadow-lg border-0">
+        <div class="card-body">
+            <div class="error-icon">
+                {% if error_code == 404 %}
+                    <i class="fas fa-search"></i>
+                {% elif error_code == 413 %}
+                    <i class="fas fa-file-excel text-warning"></i>
+                {% else %}
+                    <i class="fas fa-exclamation-triangle"></i>
+                {% endif %}
+            </div>
+            <h1 class="display-5 fw-bold text-dark">{{ error_code }}</h1>
+            <h4 class="text-secondary fw-semibold mb-3">{{ error_title }}</h4>
+            <p class="text-muted mb-4">{{ error_message }}</p>
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-primary px-4 py-2">
+                <i class="fas fa-home me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>

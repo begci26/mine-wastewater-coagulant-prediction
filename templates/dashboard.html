@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Penelitian{% endblock %}
+
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .kpi-card {
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+    }
+    .kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    
+    <!-- SECTION 1: Judul Halaman -->
+    <div class="col-12 mb-3">
+        <h1 class="h3 mb-1 text-gray-800 fw-bold">Dashboard Analisis</h1>
+        <p class="text-muted small">Optimasi Prediksi Dosis Koagulan Dalam Pengolahan Air Limbah Tambang Menggunakan Algoritma Regresi</p>
+    </div>
+
+    {% if dataset_status %}
+    <!-- SECTION 2: Tujuan Halaman & Penjelasan Ilmiah -->
+    <div class="col-lg-6 mb-3">
+        <div class="card border-0 shadow-sm bg-light-blue h-100" style="border-left: 4px solid var(--primary-blue) !important; background-color: #f0f7ff;">
+            <div class="card-body py-3 d-flex flex-column justify-content-center">
+                <h6 class="fw-bold text-primary mb-1"><i class="fas fa-info-circle me-2"></i>Tujuan Dashboard</h6>
+                <p class="m-0 text-dark small">Dashboard menyajikan ringkasan dataset aktif tersanitasi, visualisasi kualitas air, status model regresi, serta metrik aktual dari konfigurasi parameter model yang tetap.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body py-3 d-flex flex-column justify-content-center">
+                <h6 class="fw-bold text-secondary mb-1"><i class="fas fa-microscope me-2"></i>Penjelasan Proses Penelitian</h6>
+                <p class="m-0 text-muted small">Penelitian tesis ini bertujuan mengoptimalkan penentuan dosis koagulan CL-80 pada IPAL tambang batubara. Pemanfaatan algoritma regresi (Linear, XGBoost, LightGBM) dengan memadukan data lagging memory target (T1, T2, T3) bertujuan mengurangi pemakaian bahan kimia berlebih serta menjaga kualitas air sesuai ambang regulasi lingkungan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: Cara Menggunakan Dashboard -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-dark"><i class="fas fa-route text-primary me-2"></i>Panduan Siklus Alur Aplikasi</h6>
+            </div>
+            <div class="card-body py-3">
+                <div class="row g-3 text-dark small">
+                    <div class="col-md-3"><strong>1. Upload:</strong> Unggah file CSV/XLSX kualitas air harian di menu <strong>Dataset</strong>.</div>
+                    <div class="col-md-3"><strong>2. Preprocessing:</strong> Bersihkan outlier dan hitung fitur lagging di menu <strong>Preprocessing</strong>.</div>
+                    <div class="col-md-3"><strong>3. Training:</strong> Latih model regresi secara otomatis di menu <strong>Training Model</strong>.</div>
+                    <div class="col-md-3"><strong>4. Prediksi:</strong> Uji parameter baru untuk set-point dosing pompa di menu <strong>Prediksi</strong>.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SECTION 4: Area KPI Cards & Charts -->
+    <div class="col-12 mb-4">
+        {% if not dataset_status %}
+        <!-- Kondisi Data Belum Tersedia -->
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body py-5 text-muted">
+                <div class="fs-1 text-secondary mb-3"><i class="fas fa-folder-open"></i></div>
+                <h5 class="fw-bold text-dark">Data Belum Tersedia</h5>
+                <p class="small mb-4 text-center max-width-md mx-auto">Silakan unggah dataset (.csv / .xlsx) terlebih dahulu untuk memicu kalkulasi statistik ringkasan dan render grafik sebaran.</p>
+                <a href="{{ url_for('dataset.index') }}" class="btn btn-primary"><i class="fas fa-upload me-2"></i>Unggah Dataset Sekarang</a>
+            </div>
+        </div>
+        {% else %}
+        
+        <!-- 10 Kartu Statistik (KPI) -->
+        <div class="row g-3 mb-4">
+            <!-- Row 1: Informasi Dataset -->
+            <!-- Card 1: Jumlah Data -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-1">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-primary-light text-primary me-3"><i class="fas fa-database"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Jumlah Data</div>
+                            <h4 class="fw-bold text-dark m-0">{{ row_count }}</h4>
+                            <span class="text-muted" style="font-size: 0.65rem;">baris observasi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 2: Jumlah Feature -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-2">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-info-light text-info me-3"><i class="fas fa-table"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Jumlah Fitur</div>
+                            <h4 class="fw-bold text-dark m-0">{{ feature_count }}</h4>
+                            <span class="text-muted" style="font-size: 0.65rem;">kolom independen</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 3: Missing Value -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-3">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-warning-light text-warning me-3"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Missing Value</div>
+                            <h4 class="fw-bold text-dark m-0">{{ missing_value_count }}</h4>
+                            <span class="text-muted" style="font-size: 0.65rem;">sel kosong</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Jumlah Outlier -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-4">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-danger-light text-danger me-3"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Outlier</div>
+                            <h4 class="fw-bold text-dark m-0">{{ outlier_count }}</h4>
+                            <span class="text-muted" style="font-size: 0.65rem;">sel pencilan</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Rentang Data -->
+            <div class="col-12 col-md-8 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-5">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-secondary-light text-secondary me-3"><i class="fas fa-calendar-alt"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Rentang Data</div>
+                            <h6 class="fw-bold text-dark m-0 text-truncate" title="{{ date_range }}" style="font-size: 0.8rem;">{{ date_range }}</h6>
+                            <span class="text-muted" style="font-size: 0.65rem;">deret waktu harian</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <!-- Row 2: Informasi Model -->
+            <!-- Card 6: Model Terbaik -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-6">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-success-light text-success me-3"><i class="fas fa-award"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Model Terbaik</div>
+                            <h6 class="fw-bold text-success m-0 text-truncate" title="{{ best_model_name }}" style="font-size: 0.85rem;">{{ best_model_name }}</h6>
+                            <span class="text-muted" style="font-size: 0.65rem;">regresi pemenang</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 7: RMSE -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-7">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-primary-light text-primary me-3"><i class="fas fa-bullseye"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">RMSE Terbaik</div>
+                            <h5 class="fw-bold text-dark m-0" style="font-size: 0.95rem;">{{ best_model_rmse }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">selisih rata-rata</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 8: R2 -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-8">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-success-light text-success me-3"><i class="fas fa-percentage"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">R² Score</div>
+                            <h5 class="fw-bold text-dark m-0" style="font-size: 0.95rem;">{{ best_model_r2 }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">keandalan korelasi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 9: MAE -->
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-9">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon bg-info-light text-info me-3"><i class="fas fa-compress-arrows-alt"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">MAE Terbaik</div>
+                            <h5 class="fw-bold text-dark m-0" style="font-size: 0.95rem;">{{ best_model_mae }}</h5>
+                            <span class="text-muted" style="font-size: 0.65rem;">kesalahan absolut</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 10: Status Model -->
+            <div class="col-12 col-md-8 col-lg-3 col-xl-2.4" style="flex: 0 0 20%; max-width: 20%;" id="col-kpi-10">
+                <div class="card bg-white kpi-card h-100">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <div class="kpi-icon {% if model_status == 'Siap Digunakan' %}bg-success-light text-success{% else %}bg-warning-light text-warning{% endif %} me-3"><i class="fas fa-info-circle"></i></div>
+                        <div>
+                            <div class="text-muted small fw-semibold">Status Model</div>
+                            <h6 class="fw-bold text-dark m-0" style="font-size: 0.85rem;">{{ model_status }}</h6>
+                            <span class="text-muted" style="font-size: 0.65rem;">kondisi algoritma</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5 Grafik Plotly -->
+        <!-- Baris Grafik 1: Dosis CL80 (Histogram & Time Series) -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div id="chart-dosis" style="min-height: 280px;"></div>
+                        <div class="alert alert-secondary border-0 mt-2 small text-muted mb-0">
+                            <strong>Interpretasi:</strong> Histogram memperlihatkan persebaran laju pemakaian Dosis CL-80 (Target). Kerapatan data menunjukkan variasi pemakaian zat kimia pengendap di lapangan.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div id="chart-ts" style="min-height: 280px;"></div>
+                        <div class="alert alert-secondary border-0 mt-2 small text-muted mb-0">
+                            <strong>Interpretasi:</strong> Grafik deret waktu menggambarkan fluktuasi dosis harian. Tren waktu memperlihatkan pergeseran dosis yang berulang akibat perubahan debit air limbah tambang.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Baris Grafik 2: Karakteristik Inlet (TSS, pH, Debit) -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div id="chart-tss" style="min-height: 280px;"></div>
+                        <div class="alert alert-secondary border-0 mt-2 small text-muted mb-0">
+                            <strong>Interpretasi:</strong> Sebaran Inlet TSS (mg/L). Nilai yang tinggi mengindikasikan kekeruhan pekat yang memicu kenaikan dosis CL-80.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div id="chart-ph" style="min-height: 280px;"></div>
+                        <div class="alert alert-secondary border-0 mt-2 small text-muted mb-0">
+                            <strong>Interpretasi:</strong> Sebaran derajat keasaman (Inlet pH) air tambang baku. pH asam memengaruhi kecepatan flokulasi koagulan.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div id="chart-debit" style="min-height: 280px;"></div>
+                        <div class="alert alert-secondary border-0 mt-2 small text-muted mb-0">
+                            <strong>Interpretasi:</strong> Sebaran Debit Aliran Masuk (m3/s). Debit air yang tinggi melambangkan beban volumetrik hidrolik IPAL.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+    </div>
+
+    {% if dataset_status %}
+    <!-- PANEL INFORMASI PENELITIAN -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm mt-2">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Panel Informasi Penelitian Tesis</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <table class="table table-sm table-borderless small m-0">
+                            <tr>
+                                <td class="fw-bold text-dark" style="width: 35%;">Judul Penelitian</td>
+                                <td class="text-muted">: Optimasi Prediksi Dosis Koagulan Dalam Pengolahan Air Limbah Tambang Menggunakan Algoritma Regresi</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">Tujuan Penelitian</td>
+                                <td class="text-muted">: Menentukan dosis koagulan CL-80 secara optimal untuk meminimalisasi konsumsi bahan kimia dengan tingkat akurasi tinggi dan mencegah pencemaran lingkungan.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">Target Prediksi</td>
+                                <td class="text-muted">: Dosis koagulan CL-80 (ppm)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-borderless small m-0">
+                            <tr>
+                                <td class="fw-bold text-dark" style="width: 35%;">Dataset yang Digunakan</td>
+                                <td class="text-muted">: Dataset aktif tersanitasi untuk kondisi operasional CL-80 tanpa bahan kimia penunjang.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">Algoritma Regresi</td>
+                                <td class="text-muted">: Linear Regression (SPSS baseline), XGBoost Regressor, LightGBM Regressor.</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold text-dark">Variabel/Fitur Model</td>
+                                <td class="text-muted">: 11 fitur: kondisi inlet/outlet, inlet discharge, tiga lag observasi CL-80, Efisiensi_TSS, Delta_pH, dan Beban_TSS.</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if dataset_status %}
+<!-- Plotly JS -->
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Render 5 Plotly Charts
+        {% if chart_dosis_json %}
+        const dosisData = {{ chart_dosis_json | safe }};
+        Plotly.newPlot('chart-dosis', dosisData.data, dosisData.layout, {responsive: true});
+        {% endif %}
+
+        {% if chart_ts_json %}
+        const tsData = {{ chart_ts_json | safe }};
+        Plotly.newPlot('chart-ts', tsData.data, tsData.layout, {responsive: true});
+        {% endif %}
+
+        {% if chart_tss_json %}
+        const tssData = {{ chart_tss_json | safe }};
+        Plotly.newPlot('chart-tss', tssData.data, tssData.layout, {responsive: true});
+        {% endif %}
+
+        {% if chart_ph_json %}
+        const phData = {{ chart_ph_json | safe }};
+        Plotly.newPlot('chart-ph', phData.data, phData.layout, {responsive: true});
+        {% endif %}
+
+        {% if chart_debit_json %}
+        const debitData = {{ chart_debit_json | safe }};
+        Plotly.newPlot('chart-debit', debitData.data, debitData.layout, {responsive: true});
+        {% endif %}
+    });
+</script>
+{% endif %}
+
+<!-- Inline Adjustment to handle 5 columns in Bootstrap grid -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Adjust grid for 5 columns on desktop sizes
+        if (window.innerWidth >= 1200) {
+            const cols = ['col-kpi-1', 'col-kpi-2', 'col-kpi-3', 'col-kpi-4', 'col-kpi-5', 'col-kpi-6', 'col-kpi-7', 'col-kpi-8', 'col-kpi-9', 'col-kpi-10'];
+            cols.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.className = "col-xl-2.4 col-lg-3 col-md-4 col-6";
+                }
+            });
+        }
+    });
+</script>
+<style>
+    @media (min-width: 1200px) {
+        .col-xl-2\.4 {
+            flex: 0 0 20% !important;
+            max-width: 20% !important;
+        }
+    }
+</style>
+{% endblock %}

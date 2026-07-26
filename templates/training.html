@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+
+{% block title %}Pelatihan & Evaluasi Model Regresi{% endblock %}
+
+{% block breadcrumb %}Pelatihan Model{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Judul Halaman -->
+    <div class="col-12 mb-3">
+        <h1 class="h3 mb-0 text-gray-800 fw-bold">Pelatihan & Evaluasi Model Regresi</h1>
+        <p class="text-muted small">Kelola pelatihan model Linear Regression, XGBoost, dan LightGBM beserta Cross-Validation dan analisis perbandingan BAB IV.</p>
+    </div>
+
+    <!-- PENGATURAN & AKSI -->
+    <div class="col-lg-5 mb-4">
+        <!-- Panel Konfigurasi Pelatihan (Read-Only) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-sliders-h text-primary me-2"></i>Konfigurasi Pelatihan</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom table-sm text-start m-0 small" style="font-size: 0.8rem;">
+                        <tbody>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2" style="width: 45%;">Nama Dataset</td>
+                                <td class="text-muted"><code>{{ config_panel.dataset_name }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Jumlah Baris Data</td>
+                                <td class="text-muted"><strong>{{ config_panel.rows_count }} baris</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Jumlah Fitur</td>
+                                <td class="text-muted"><strong>{{ config_panel.cols_count }} fitur</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Variabel Target</td>
+                                <td class="text-success fw-bold">{{ config_panel.target_col }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Metode Pembagian</td>
+                                <td class="text-muted">{{ config_panel.split_method }}</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Rasio Data Latih</td>
+                                <td class="text-muted">80%</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Rasio Data Uji</td>
+                                <td class="text-muted">20%</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Shuffle Split</td>
+                                <td class="text-muted"><code>Tidak</code></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Metode Cross-Val</td>
+                                <td class="text-muted">Time Series Cross-Validation with 5 splits</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-semibold ps-3 py-2">Urutan Cross-Val</td>
+                                <td class="text-muted">Training selalu sebelum validation</td>
+                            </tr>
+                            <tr class="table-info text-dark">
+                                <td class="fw-semibold ps-3 py-2">Waktu Terakhir Pelatihan</td>
+                                <td><strong>{{ config_panel.training_date }}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol Aksi Mulai Training -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <button type="button" id="start-btn" onclick="startTraining()" class="btn btn-primary btn-lg w-100 shadow-sm fw-bold">
+                    <i class="fas fa-play me-2"></i>Mulai Pelatihan Model
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Monitoring Card (Hidden by default, shown on click) -->
+        <div class="card shadow-sm border-0 mb-4 d-none" id="progress-card">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-primary"><i class="fas fa-tasks me-2"></i>Monitoring Pelatihan Real-Time</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="small fw-bold text-dark" id="progress-status">Menginisialisasi...</span>
+                    <span class="small fw-bold text-primary" id="progress-percentage">0%</span>
+                </div>
+                <div class="progress mb-3" style="height: 18px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="row text-center text-muted small g-2">
+                    <div class="col-4 border-end">
+                        <div class="fw-semibold" style="font-size: 0.7rem;">Waktu Mulai</div>
+                        <div class="text-dark fw-bold" id="progress-start">-</div>
+                    </div>
+                    <div class="col-4 border-end">
+                        <div class="fw-semibold" style="font-size: 0.7rem;">Durasi Berjalan</div>
+                        <div class="text-dark fw-bold" id="progress-elapsed">0s</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-semibold" style="font-size: 0.7rem;">Estimasi Sisa</div>
+                        <div class="text-dark fw-bold" id="progress-estimated">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parameter Default Tesis -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="m-0 fw-bold text-dark"><i class="fas fa-cog text-secondary me-2"></i>Parameter Baku Algoritma</h6>
+            </div>
+            <div class="card-body py-3 small text-muted">
+                <p class="mb-2"><strong>Linear Regression:</strong> <code>fit_intercept=True</code>, <code>copy_X=True</code>, <code>positive=False</code></p>
+                <p class="mb-2"><strong>XGBoost Regressor:</strong> <code>n_estimators=300</code>, <code>learning_rate=0.05</code>, <code>max_depth=6</code>, <code>subsample=0.8</code>, <code>colsample_bytree=0.8</code></p>
+                <p class="m-0"><strong>LightGBM Regressor:</strong> <code>n_estimators=300</code>, <code>learning_rate=0.05</code>, <code>num_leaves=31</code>, <code>max_depth=-1</code>, <code>min_child_samples=20</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AREA HASIL TRAINING -->
+    <div class="col-lg-7 mb-4">
+        {% if is_complete and metadata %}
+        
+        <!-- LEADERBOARD MODEL TERBAIK -->
+        <div class="card shadow-sm border-0 mb-4 bg-gradient-light" style="border-top: 4px solid var(--primary-blue) !important;">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-trophy text-warning me-2"></i>Peringkat Model (Leaderboard)</h5>
+                <div class="dropdown">
+                    <button class="btn btn-xs btn-outline-success dropdown-toggle fw-bold" type="button" id="downloadDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-1"></i>Unduh Laporan BAB IV
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="downloadDropdown">
+                        <li><a class="dropdown-item small" href="{{ url_for('training.download', file_type='xlsx') }}"><i class="fas fa-file-excel text-success me-2"></i>Ekspor Excel (.xlsx)</a></li>
+                        <li><a class="dropdown-item small" href="{{ url_for('training.download', file_type='csv') }}"><i class="fas fa-file-csv text-primary me-2"></i>Ekspor CSV (.csv)</a></li>
+                        <li><a class="dropdown-item small" href="{{ url_for('training.download', file_type='pdf') }}"><i class="fas fa-file-pdf text-danger me-2"></i>Ekspor PDF (.pdf)</a></li>
+                        <li><a class="dropdown-item small" href="{{ url_for('training.download', file_type='json') }}"><i class="fas fa-file-code text-secondary me-2"></i>Ekspor Metadata (.json)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body py-4">
+                {% set sorted_models = metadata.model_details.items() | sort(attribute='1.rmse') %}
+                {% set rank_icons = ['🥇', '🥈', '🥉'] %}
+                
+                {% for name, m in sorted_models %}
+                <div class="d-flex align-items-center border rounded p-3 mb-3 {% if loop.index == 1 %}bg-light-blue border-primary{% else %}bg-white{% endif %}">
+                    <div class="fs-2 me-4">{{ rank_icons[loop.index - 1] }}</div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 {% if loop.index == 1 %}text-primary{% else %}text-dark{% endif %}">
+                            {{ name }} 
+                            {% if loop.index == 1 %}<span class="badge bg-primary ms-2 small">Model Terbaik</span>{% endif %}
+                        </h6>
+                        <ul class="list-inline mb-0 small text-muted">
+                            <li class="list-inline-item">Test RMSE: <strong>{{ m.test.rmse }}</strong></li>
+                            <li class="list-inline-item">|</li>
+                            <li class="list-inline-item">Test MAE: <strong>{{ m.test.mae }}</strong></li>
+                            <li class="list-inline-item">|</li>
+                            <li class="list-inline-item">Test R²: <strong>{{ m.test.r2 }}</strong></li>
+                            <li class="list-inline-item">|</li>
+                            <li class="list-inline-item">Waktu: <strong>{{ m.duration }}s</strong></li>
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="alert alert-info border-0 m-0 small text-dark mt-3">
+                    <strong>Alasan Pemilihan Model Terbaik:</strong> Model <strong>{{ metadata.best_model }}</strong> dipilih secara objektif karena mencatatkan nilai Root Mean Squared Error (RMSE) terendah ({{ metadata.best_metrics.rmse }} ppm) dan Mean Absolute Error (MAE) terkecil ({{ metadata.best_metrics.mae }} ppm) pada pengujian data uji independen.
+                </div>
+            </div>
+        </div>
+
+        <!-- TABEL DETAIL PARAMETER MODEL -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list text-primary me-2"></i>Hasil Detail Pelatihan Algoritma</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom text-center m-0 small" style="font-size: 0.75rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nama Model</th>
+                                <th>Data (Latih/Uji)</th>
+                                <th>Fitur</th>
+                                <th>Durasi</th>
+                                <th>Train MAE/RMSE/R²</th>
+                                <th>Test MAE/RMSE/R²</th>
+                                <th>R² Gap</th>
+                                <th>CV RMSE Mean</th>
+                                <th>CV RMSE Std</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, m in metadata.model_details.items() %}
+                            <tr>
+                                <td class="fw-bold text-start ps-3">{{ name }}</td>
+                                <td>{{ (metadata.rows_count * 0.8) | round | int }} / {{ (metadata.rows_count * 0.2) | round | int }}</td>
+                                <td>{{ metadata.cols_count }}</td>
+                                <td>{{ m.duration }}s</td>
+                                <td>{{ '%.4f'|format(m.train.mae) }} / {{ '%.4f'|format(m.train.rmse) }} / {{ '%.4f'|format(m.train.r2) }}</td>
+                                <td class="text-primary">{{ '%.4f'|format(m.test.mae) }} / {{ '%.4f'|format(m.test.rmse) }} / {{ '%.4f'|format(m.test.r2) }}</td>
+                                <td>{{ '%.4f'|format(m.r2_gap) }}</td>
+                                <td>{{ '%.4f'|format(m.cv.rmse_mean) }}</td>
+                                <td>{{ '%.4f'|format(m.cv.rmse_std) }}</td>
+                                <td><span class="badge bg-success">Berhasil</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRAFIK PERBANDINGAN MODEL (PLOTLY) -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-bar text-primary me-2"></i>Visualisasi Komparatif Performa</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active btn-sm py-1 px-3 fw-bold small" id="pills-rmse-tab" data-bs-toggle="tab" data-bs-target="#pills-rmse" type="button" role="tab" aria-controls="pills-rmse" aria-selected="true">RMSE</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm py-1 px-3 fw-bold small" id="pills-mae-tab" data-bs-toggle="tab" data-bs-target="#pills-mae" type="button" role="tab" aria-controls="pills-mae" aria-selected="false">MAE</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm py-1 px-3 fw-bold small" id="pills-r2-tab" data-bs-toggle="tab" data-bs-target="#pills-r2" type="button" role="tab" aria-controls="pills-r2" aria-selected="false">R² Score</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm py-1 px-3 fw-bold small" id="pills-time-tab" data-bs-toggle="tab" data-bs-target="#pills-time" type="button" role="tab" aria-controls="pills-time" aria-selected="false">Durasi</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade show active" id="pills-rmse" role="tabpanel" aria-labelledby="pills-rmse-tab">
+                        <div id="plot-rmse" style="min-height: 280px;"></div>
+                    </div>
+                    <div class="tab-pane fade" id="pills-mae" role="tabpanel" aria-labelledby="pills-mae-tab">
+                        <div id="plot-mae" style="min-height: 280px;"></div>
+                    </div>
+                    <div class="tab-pane fade" id="pills-r2" role="tabpanel" aria-labelledby="pills-r2-tab">
+                        <div id="plot-r2" style="min-height: 280px;"></div>
+                    </div>
+                    <div class="tab-pane fade" id="pills-time" role="tabpanel" aria-labelledby="pills-time-tab">
+                        <div id="plot-time" style="min-height: 280px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Kondisi Belum Ada Model Dilatih -->
+        <div class="card shadow-sm border-0 py-5 text-center text-muted">
+            <div class="card-body">
+                <i class="fas fa-microchip fs-1 mb-3 text-secondary"></i>
+                <h5 class="fw-bold text-dark">Belum Ada Model yang Dilatih</h5>
+                <p class="small mb-0">Klik tombol "Mulai Pelatihan Model" untuk menjalankan Time Series Cross-Validation pada tiga algoritma regresi.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- PANEL PENJELASAN ILMIAH -->
+    <div class="col-12 mb-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold text-dark m-0"><i class="fas fa-graduation-cap text-primary me-2"></i>Penjelasan Ilmiah Pelatihan & Evaluasi</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-muted small g-3">
+                    <div class="col-md-6 border-end">
+                        <h6 class="fw-bold text-dark"><i class="fas fa-brain text-primary me-2"></i>Apa itu Pelatihan Model Regresi?</h6>
+                        <p class="mb-3">
+                            Pelatihan model merupakan proses pencarian parameter internal (bobot linier atau struktur pohon keputusan) oleh algoritma machine learning menggunakan fitur kualitas air tambang. Tujuannya adalah meminimalkan tingkat error estimasi dosis CL-80 terhadap data historis IPAL.
+                        </p>
+
+                        <h6 class="fw-bold text-dark"><i class="fas fa-chart-pie text-success me-2"></i>Mengapa Menggunakan 5-Fold Cross Validation?</h6>
+                        <p class="mb-3">
+                            Time Series Cross-Validation with 5 splits mempertahankan urutan waktu: setiap validation fold selalu berada setelah training fold. Preprocessing dipelajari ulang hanya dari training fold.
+                        </p>
+
+                        <h6 class="fw-bold text-dark"><i class="fas fa-shield-alt text-warning me-2"></i>Mengapa Menggunakan Train-Test Split (80:20)?</h6>
+                        <p class="m-0">
+                            Pembagian 80% data latih dan 20% data uji independen mensimulasikan penerapan model pada kondisi lapangan nyata. Model dilarang keras "melihat" data uji selama pelatihan untuk menjamin keabsahan evaluasi metrik akurasi BAB IV tesis.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-dark"><i class="fas fa-random text-info me-2"></i>Mengapa Membandingkan Tiga Algoritma Regresi?</h6>
+                        <p class="mb-3">
+                            Riset membandingkan model linier baseline (Linear Regression) dengan model ansambel berbasis pohon keputusan non-linier (XGBoost Regressor dan LightGBM Regressor). Hal ini membuktikan keunggulan arsitektur boosting dalam menangkap hubungan non-linier kompleks parameter kimia air limbah tambang batubara.
+                        </p>
+
+                        <h6 class="fw-bold text-dark"><i class="fas fa-check-circle text-primary me-2"></i>Mengapa RMSE Dipilih Sebagai Kriteria Utama?</h6>
+                        <p class="m-0">
+                            Root Mean Squared Error (RMSE) memberikan penalti kuadrat yang lebih besar bagi error prediksi yang ekstrim. Dalam pengolahan air tambang batubara, error estimasi dosis koagulan yang terlalu besar sangat dihindari karena dapat memicu kegagalan pengendapan TSS (jika dosis kurang) atau pemborosan biaya operasional (jika dosis berlebih). Oleh karena itu, RMSE menjadi parameter kriteria kecocokan (goodness-of-fit) terbaik bagi tesis ini.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+<script>
+    function startTraining() {
+        const startBtn = document.getElementById('start-btn');
+        const progressCard = document.getElementById('progress-card');
+        
+        startBtn.disabled = true;
+        progressCard.classList.remove('d-none');
+        
+        fetch("{{ url_for('training.run_ajax') }}", { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const interval = setInterval(() => {
+                        fetch("{{ url_for('training.progress') }}")
+                            .then(res => res.json())
+                            .then(progress => {
+                                document.getElementById('progress-status').innerHTML = progress.status;
+                                document.getElementById('progress-percentage').innerText = progress.percentage + "%";
+                                document.getElementById('progress-bar').style.width = progress.percentage + "%";
+                                document.getElementById('progress-bar').setAttribute('aria-valuenow', progress.percentage);
+                                document.getElementById('progress-start').innerText = progress.start_time || "-";
+                                document.getElementById('progress-elapsed').innerText = progress.elapsed_time + "s";
+                                document.getElementById('progress-estimated').innerText = progress.estimated_time + "s";
+                                
+                                if (progress.percentage === 100) {
+                                    clearInterval(interval);
+                                    window.location.href = "{{ url_for('training.complete') }}";
+                                } else if (progress.error) {
+                                    clearInterval(interval);
+                                    alert("Terjadi kesalahan saat pelatihan: " + progress.error);
+                                    startBtn.disabled = false;
+                                }
+                            });
+                    }, 1000);
+                } else {
+                    alert("Gagal memulai pelatihan: " + data.error);
+                    startBtn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Kesalahan koneksi ke server.");
+                startBtn.disabled = false;
+            });
+    }
+
+    {% if is_complete and metadata %}
+    document.addEventListener("DOMContentLoaded", function() {
+        const modelNames = [];
+        const rmses = [];
+        const maes = [];
+        const r2s = [];
+        const durations = [];
+        
+        {% for name, m in metadata.model_details.items() %}
+            modelNames.push("{{ name }}");
+            rmses.push({{ m.test.rmse }});
+            maes.push({{ m.test.mae }});
+            r2s.push({{ m.test.r2 }});
+            durations.push({{ m.duration }});
+        {% endfor %}
+        
+        const chartLayout = {
+            margin: { l: 50, r: 20, t: 20, b: 50 },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: { gridcolor: '#f3f4f6' },
+            yaxis: { gridcolor: '#f3f4f6' }
+        };
+        
+        // 1. Plot RMSE
+        Plotly.newPlot('plot-rmse', [{
+            x: modelNames,
+            y: rmses,
+            type: 'bar',
+            marker: { color: ['#3b82f6', '#10b981', '#f59e0b'] }
+        }], chartLayout, {responsive: true});
+        
+        // 2. Plot MAE
+        Plotly.newPlot('plot-mae', [{
+            x: modelNames,
+            y: maes,
+            type: 'bar',
+            marker: { color: ['#10b981', '#3b82f6', '#f59e0b'] }
+        }], chartLayout, {responsive: true});
+        
+        // 3. Plot R2
+        Plotly.newPlot('plot-r2', [{
+            x: modelNames,
+            y: r2s,
+            type: 'bar',
+            marker: { color: ['#f59e0b', '#3b82f6', '#10b981'] }
+        }], chartLayout, {responsive: true});
+        
+        // 4. Plot Duration
+        Plotly.newPlot('plot-time', [{
+            x: modelNames,
+            y: durations,
+            type: 'bar',
+            marker: { color: ['#8b5cf6', '#3b82f6', '#10b981'] }
+        }], chartLayout, {responsive: true});
+    });
+    {% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,706 @@
+{% extends 'base.html' %}
+
+{% block title %}Exploratory Data Analysis (EDA){% endblock %}
+
+{% block breadcrumb %}Eksplorasi Data{% endblock %}
+
+{% block extra_css %}
+<!-- DataTables & Buttons CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+<style>
+    .nav-tabs .nav-link {
+        font-weight: 600;
+        color: #4b5563;
+        border: none;
+        border-bottom: 3px solid transparent;
+        padding: 0.75rem 1.25rem;
+        transition: all 0.2s ease;
+    }
+    .nav-tabs .nav-link:hover {
+        color: #2563eb;
+        background-color: #f3f4f6;
+    }
+    .nav-tabs .nav-link.active {
+        color: #2563eb;
+        border-bottom-color: #2563eb;
+        background-color: #fff;
+    }
+    .eda-card {
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+    }
+    .kpi-icon-lg {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    .dt-buttons .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Judul Halaman -->
+    <div class="col-12 mb-3">
+        <h1 class="h3 mb-0 text-gray-800 fw-bold">Eksplorasi Data (EDA)</h1>
+        <p class="text-muted small">Tinjau karakteristik sebaran, korelasi Pearson, multikolinearitas VIF, dan trend time-series untuk BAB IV Tesis.</p>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="col-12 mb-4">
+        <ul class="nav nav-tabs border-bottom mb-3" id="edaTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#tab-summary" type="button" role="tab" aria-controls="tab-summary" aria-selected="true">
+                    <i class="fas fa-database me-2"></i>Ringkasan
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="descriptive-tab" data-bs-toggle="tab" data-bs-target="#tab-descriptive" type="button" role="tab" aria-controls="tab-descriptive" aria-selected="false">
+                    <i class="fas fa-table me-2"></i>Statistik Deskriptif
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dist-tab" data-bs-toggle="tab" data-bs-target="#tab-dist" type="button" role="tab" aria-controls="tab-dist" aria-selected="false">
+                    <i class="fas fa-chart-bar me-2"></i>Distribusi
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="corr-tab" data-bs-toggle="tab" data-bs-target="#tab-corr" type="button" role="tab" aria-controls="tab-corr" aria-selected="false">
+                    <i class="fas fa-project-diagram"></i> Korelasi & VIF
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="target-tab" data-bs-toggle="tab" data-bs-target="#tab-target" type="button" role="tab" aria-controls="tab-target" aria-selected="false">
+                    <i class="fas fa-bullseye me-2"></i>Analisis Target
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ts-tab" data-bs-toggle="tab" data-bs-target="#tab-ts" type="button" role="tab" aria-controls="tab-ts" aria-selected="false">
+                    <i class="fas fa-chart-line me-2"></i>Time Series
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="insight-tab" data-bs-toggle="tab" data-bs-target="#tab-insight" type="button" role="tab" aria-controls="tab-insight" aria-selected="false">
+                    <i class="fas fa-lightbulb me-2"></i>Insight Otomatis
+                </button>
+            </li>
+        </ul>
+
+        <!-- TABS CONTENT -->
+        <div class="tab-content" id="edaTabsContent">
+            
+            <!-- TAB 1: RINGKASAN DATASET -->
+            <div class="tab-pane fade show active" id="tab-summary" role="tabpanel" aria-labelledby="summary-tab">
+                <div class="row g-3 mb-4">
+                    <!-- Cards Grid -->
+                    <div class="col-md-3">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-primary-light text-primary me-3"><i class="fas fa-database"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Jumlah Data</div>
+                                    <h4 class="fw-bold text-dark m-0">{{ summary.rows }}</h4>
+                                    <span class="text-muted small" style="font-size: 0.65rem;">baris sampel</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-info-light text-info me-3"><i class="fas fa-columns"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Jumlah Kolom</div>
+                                    <h4 class="fw-bold text-dark m-0">{{ summary.cols }}</h4>
+                                    <span class="text-muted small" style="font-size: 0.65rem;">total kolom variabel</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-warning-light text-warning me-3"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Missing Value</div>
+                                    <h4 class="fw-bold text-dark m-0">{{ summary.missing }}</h4>
+                                    <span class="text-muted small" style="font-size: 0.65rem;">sel kosong terdeteksi</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-danger-light text-danger me-3"><i class="fas fa-chart-bar"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Jumlah Outlier</div>
+                                    <h4 class="fw-bold text-dark m-0">{{ summary.outliers }}</h4>
+                                    <span class="text-muted small" style="font-size: 0.65rem;">baris pencilan</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-secondary-light text-secondary me-3"><i class="fas fa-calendar-alt"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Rentang Tanggal</div>
+                                    <h6 class="fw-bold text-dark m-0">{{ summary.date_range }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-success-light text-success me-3"><i class="fas fa-bullseye"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Target Prediksi</div>
+                                    <h6 class="fw-bold text-success m-0">{{ summary.target }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card eda-card bg-white h-100">
+                            <div class="card-body d-flex align-items-center p-3">
+                                <div class="kpi-icon-lg bg-primary-light text-primary me-3"><i class="fas fa-magic"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-semibold">Jumlah Fitur Baru</div>
+                                    <h6 class="fw-bold text-dark m-0">7 Fitur Rekayasa Terbentuk</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Ringkasan Dataset</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Menyajikan rangkuman metadata dari data aktif hasil prapemrosesan meliputi total dimensi baris, total kolom, jumlah missing value, outlier, dan variabel target.</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> Untuk memberikan pemahaman awal cepat mengenai kelayakan data operasional harian IPAL yang akan dimasukkan ke alur modeling.</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Membantu pendokumentasian bab metrik deskripsi data dalam naskah tesis. Output tersimpan secara ringkas dalam format biner terpadu.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: STATISTIK DESKRIPTIF -->
+            <div class="tab-pane fade" id="tab-descriptive" role="tabpanel" aria-labelledby="descriptive-tab">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-calculator text-primary me-2"></i>Tabel Parameter Statistik Deskriptif</h5>
+                        <div>
+                            <a href="{{ url_for('eda.download_bab4', filename='summary_statistic.xlsx') }}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-file-excel me-1"></i>Unduh Excel BAB IV
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover text-center small w-100" id="table-stats">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nama Variabel</th>
+                                        <th>Count</th>
+                                        <th>Mean</th>
+                                        <th>Median</th>
+                                        <th>Mode</th>
+                                        <th>Min</th>
+                                        <th>Max</th>
+                                        <th>Q1</th>
+                                        <th>Q3</th>
+                                        <th>IQR</th>
+                                        <th>Std Dev</th>
+                                        <th>Skewness</th>
+                                        <th>Kurtosis</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Terisi via AJAX DataTable -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Statistik Deskriptif</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Menghitung tendensi sentral (mean, median, modus), dispersi (standar deviasi, min, max, IQR, varians), dan bentuk sebaran data (skewness, kurtosis) secara otomatis.</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> Skewness mengukur kemiringan kurva (jika > 0.5 maka miring kanan, < -0.5 miring kiri) yang memengaruhi kesiapan model linear. Kurtosis mendeteksi ketajaman puncak distribusi (ketinggian data menumpuk).</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Tabel statistik ini wajib diekspor ke naskah BAB IV (Sub-bab Deskripsi Data Tesis). File excel pendukung siap diunduh lewat tombol di atas.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: DISTRIBUSI DATA -->
+            <div class="tab-pane fade" id="tab-dist" role="tabpanel" aria-labelledby="dist-tab">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-pie text-primary me-2"></i>Distribusi Variabel Masukan</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="feature-select" class="form-label mb-0 small fw-bold">Pilih Fitur:</label>
+                            <select id="feature-select" class="form-select form-select-sm w-auto" style="min-width: 180px;">
+                                {% for feat in features %}
+                                <option value="{{ feat }}">{{ feat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">Histogram Sebaran</h6>
+                                        <button class="btn btn-xs btn-outline-primary" onclick="downloadPlotly('plotly-hist', 'histogram')"><i class="fas fa-download"></i> PNG</button>
+                                    </div>
+                                    <div id="plotly-hist" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">Boxplot IQR Outlier</h6>
+                                        <button class="btn btn-xs btn-outline-primary" onclick="downloadPlotly('plotly-box', 'boxplot')"><i class="fas fa-download"></i> PNG</button>
+                                    </div>
+                                    <div id="plotly-box" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">Kernel Density Estimation (KDE)</h6>
+                                        <button class="btn btn-xs btn-outline-primary" onclick="downloadPlotly('plotly-kde', 'density')"><i class="fas fa-download"></i> PNG</button>
+                                    </div>
+                                    <div id="plotly-kde" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">Violin Plot</h6>
+                                        <button class="btn btn-xs btn-outline-primary" onclick="downloadPlotly('plotly-violin', 'violin')"><i class="fas fa-download"></i> PNG</button>
+                                    </div>
+                                    <div id="plotly-violin" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Distribusi Data</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Merender 4 tipe grafik sebaran secara interaktif untuk variabel yang dipilih (Histogram, Boxplot, KDE Density, dan Violin).</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> Visualisasi gabungan ini membantu membuktikan secara teoritis bentuk sebaran data, letak konsentrasi data, serta keberadaan rentang pencilan fungsional di lapangan.</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Pengguna dapat mengunduh grafik beresolusi tinggi langsung melalui tombol unduh PNG di pojok kanan atas masing-masing bagan untuk disertakan pada lampiran BAB IV.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: ANALISIS KORELASI & VIF -->
+            <div class="tab-pane fade" id="tab-corr" role="tabpanel" aria-labelledby="corr-tab">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-th text-primary me-2"></i>Heatmap Korelasi Pearson</h5>
+                                <a href="{{ url_for('eda.download_bab4', filename='heatmap.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh PNG</a>
+                            </div>
+                            <div class="card-body">
+                                <div id="plotly-heatmap" style="min-height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list-ol text-primary me-2"></i>Ranking Korelasi Terhadap Target</h5>
+                                <a href="{{ url_for('eda.download_bab4', filename='korelasi.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh Chart</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                                    <table class="table table-hover text-center small m-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Peringkat</th>
+                                                <th>Variabel Masukan</th>
+                                                <th>Koefisien ($R$)</th>
+                                                <th>Kekuatan Hubungan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for rank in corr_ranking %}
+                                            <tr>
+                                                <td>{{ loop.index }}</td>
+                                                <td class="fw-bold text-start ps-3">{{ rank.feature }}</td>
+                                                <td class="{% if rank.coef > 0 %}text-success{% else %}text-danger{% endif %} fw-bold">{{ rank.coef }}</td>
+                                                <td><span class="badge {% if rank.category == 'Sangat Kuat' or rank.category == 'Kuat' %}bg-success{% elif rank.category == 'Sedang' %}bg-info{% else %}bg-secondary{% endif %}">{{ rank.category }}</span></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VIF & Multikolinearitas -->
+                    <div class="col-12 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-shield-alt text-primary me-2"></i>Variance Inflation Factor (VIF) & Multikolinearitas</h5>
+                                <a href="{{ url_for('eda.download_bab4', filename='vif.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh VIF Chart</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover text-center m-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Nama Variabel Fitur</th>
+                                                <th>Koefisien Korelasi Target ($R$)</th>
+                                                <th>Nilai VIF</th>
+                                                <th>Status Kolilinearitas</th>
+                                                <th>Rekomendasi Riset</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in vif_table %}
+                                            <tr class="{% if item.vif > 10.0 %}table-warning{% endif %}">
+                                                <td class="fw-bold text-start ps-4">{{ item.feature }}</td>
+                                                <td>{{ item.correlation }}</td>
+                                                <td class="fw-bold">{{ item.vif }}</td>
+                                                <td>
+                                                    {% if item.vif > 10.0 %}
+                                                    <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i>Multikolinearitas Tinggi</span>
+                                                    {% else %}
+                                                    <span class="badge bg-success">Aman (VIF <= 10)</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="small text-muted">{{ item.recommendation }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Korelasi & VIF</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Menghitung koefisien korelasi Pearson antarvariabel dan Variance Inflation Factor (VIF) untuk setiap fitur masukan.</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> VIF mengukur tingkat kenaikan variansi koefisien regresi akibat multikolinieritas. VIF > 10 menunjukkan tingkat redundansi fitur yang sangat tinggi. Hubungan linear ke target diklasifikasikan dari Sangat Kuat s.d Sangat Lemah.</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Menjadi landasan metodologi mengapa model regresi linier biasa (yang sensitif multikolinieritas) dibandingkan dengan algoritma Boosting (XGBoost, LightGBM) yang kebal terhadap kolilinearitas tinggi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: ANALISIS TARGET -->
+            <div class="tab-pane fade" id="tab-target" role="tabpanel" aria-labelledby="target-tab">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-bullseye text-primary me-2"></i>Karakteristik Variabel Target (Dosis CL-80 (ppm))</h5>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('eda.download_bab4', filename='histogram_cl80.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh Hist</a>
+                            <a href="{{ url_for('eda.download_bab4', filename='target_distribution.png') }}" class="btn btn-xs btn-outline-success"><i class="fas fa-download me-1"></i>Unduh KDE</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold text-dark mb-3">Distribusi Target Dosis CL-80</h6>
+                                    <div id="target-hist" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold text-dark mb-3">QQ Plot Normalitas Target</h6>
+                                    <div id="target-qq" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold text-dark mb-3">Boxplot Rentang Dosis CL-80</h6>
+                                    <div id="target-box" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3">
+                                    <h6 class="fw-bold text-dark mb-3">Laju Tren Fluktuasi Target</h6>
+                                    <div id="target-trend" style="min-height: 280px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Analisis Target</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Menganalisis kurva normalitas variabel target Dosis CL-80 menggunakan Histogram, Boxplot, Line Trend, dan QQ-Plot.</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> QQ-Plot (Quantile-Quantile Plot) memetakan kuantil sampel terhadap kuantil teoretis distribusi normal. Jika titik data berimpit pada garis diagonal merah, maka variabel target berdistribusi normal.</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Pembuktian normalitas target penting dalam membenarkan pengujian asumsi klasik regresi linier dalam BAB IV tesis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: TIME SERIES -->
+            <div class="tab-pane fade" id="tab-ts" role="tabpanel" aria-labelledby="ts-tab">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-line text-primary me-2"></i>Analisis Pola Deret Waktu (Time Series)</h5>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('eda.download_bab4', filename='trend_cl80.png') }}" class="btn btn-xs btn-outline-primary"><i class="fas fa-download me-1"></i>Unduh Trend CL80</a>
+                            <a href="{{ url_for('eda.download_bab4', filename='trend_tss.png') }}" class="btn btn-xs btn-outline-success"><i class="fas fa-download me-1"></i>Unduh Trend TSS</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="border rounded p-3 mb-4">
+                            <h6 class="fw-bold text-dark mb-2">1. Tren Fluktuasi Dosis Target CL-80 (ppm)</h6>
+                            <div id="ts-cl80" style="min-height: 250px;"></div>
+                        </div>
+                        <div class="border rounded p-3 mb-4">
+                            <h6 class="fw-bold text-dark mb-2">2. Tren Perbandingan Inlet vs Outlet TSS (mg/L)</h6>
+                            <div id="ts-tss" style="min-height: 250px;"></div>
+                        </div>
+                        <div class="border rounded p-3 mb-4">
+                            <h6 class="fw-bold text-dark mb-2">3. Tren Perbandingan Inlet vs Outlet pH</h6>
+                            <div id="ts-ph" style="min-height: 250px;"></div>
+                        </div>
+                        <div class="border rounded p-3 mb-4">
+                            <h6 class="fw-bold text-dark mb-2">4. Laju Debit Aliran Air Limbah (Inlet Disch - m³/s)</h6>
+                            <div id="ts-debit" style="min-height: 250px;"></div>
+                        </div>
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold text-dark mb-2">5. Ruang Lingkup Kimia Penunjang</h6>
+                            <div id="ts-chem" style="min-height: 250px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Time Series</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Memvisualisasikan laju historis parameter masukan fisik dan target sepanjang waktu secara longitudinal.</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> IPAL tambang batubara beroperasi secara berulang dengan beban pencemaran dinamis. Tren deret waktu membantu operator mengidentifikasi siklus harian atau mingguan.</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Memvalidasi secara visual ketergantungan deret waktu (autokorelasi) yang memperkuat keputusan akademis penggunaan fitur lag memory (T1, T2, T3) pada tesis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: INSIGHT OTOMATIS -->
+            <div class="tab-pane fade" id="tab-insight" role="tabpanel" aria-labelledby="insight-tab">
+                <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid var(--primary-blue-light) !important;">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="m-0 fw-bold text-primary"><i class="fas fa-lightbulb me-2"></i>Insight Ringkasan Otomatis Analisis Data</h5>
+                    </div>
+                    <div class="card-body py-4 text-dark small" style="line-height: 1.8;">
+                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-check-circle text-success me-2"></i>Kesimpulan Deskripsi & Karakteristik Data:</h6>
+                        <ul class="ps-3 mb-4 text-muted">
+                            <li>Dataset telah dibersihkan secara penuh. Tidak ditemukan missing value (0 sel kosong) dan data duplikasi telah dibuang otomatis.</li>
+                            <li>Distribusi variabel target Dosis CL-80 (ppm) relatif menyebar stabil dengan skewness yang wajar, layak didekati oleh regressor berbasis pohon maupun linier.</li>
+                            <li>Terdapat 3 fitur lagging target (Kolom T1, T2, T3) yang sukses melestarikan dependensi deret waktu operasional IPAL tambang batubara.</li>
+                        </ul>
+
+                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-check-circle text-success me-2"></i>Analisis Korelasi Pearson & Pengaruh Fitur:</h6>
+                        <ul class="ps-3 mb-4 text-muted">
+                            <li>Variabel <strong>Beban_TSS</strong> dan <strong>Inlet TSS</strong> memiliki korelasi searah yang kuat positif terhadap Dosis CL-80. Kenaikan kekeruhan padatan berbanding lurus dengan kebutuhan koagulan aktif.</li>
+                            <li>Variabel penunjang seperti <strong>Delta_pH</strong> menunjukkan tingkat korelasi sedang, menandakan perannya sebagai set-point asam basa dalam mempercepat flokulasi.</li>
+                        </ul>
+
+                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-check-circle text-success me-2"></i>Deteksi Kolilinearitas & Kelayakan Pemodelan:</h6>
+                        <ul class="ps-3 mb-4 text-muted">
+                            <li>Analisis Variance Inflation Factor (VIF) mendeteksi adanya multikolinearitas tinggi (VIF > 10) antara fitur lagging (T1, T2, T3) dan fitur beban fisik air. Hal ini wajar dalam pemodelan deret waktu (time series).</li>
+                            <li><strong>Rekomendasi Algoritma:</strong> Karena adanya kolilinearitas tinggi, penggunaan algoritma linier (Linear Regression) diprediksi kurang optimal. Penelitian ini merekomendasikan algoritma regresi ensemble berbasis pohon (XGBoost Regressor dan LightGBM Regressor) yang kebal terhadap multikolinearitas untuk memperoleh akurasi prediksi tertinggi pada naskah tesis.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Panel Penjelasan -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="fw-bold text-dark m-0"><i class="fas fa-info-circle text-primary me-2"></i>Penjelasan Proses: Insight Otomatis</h6>
+                    </div>
+                    <div class="card-body py-3 small text-muted">
+                        <p class="mb-1"><strong>Apa yang dilakukan:</strong> Merangkum temuan statistik, korelasi, dan multikolinearitas secara tertulis dalam Bahasa Indonesia ilmiah.</p>
+                        <p class="mb-1"><strong>Mengapa dilakukan:</strong> Menjembatani hasil kalkulasi angka grafik ke dalam penjelasan naratif akademis yang dapat dibaca oleh peneliti.</p>
+                        <p class="m-0"><strong>Hubungan dengan Penelitian & Output:</strong> Insight naratif ini secara langsung dapat disadur ke bagian pembahasan/analisis bab IV hasil penelitian tesis.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables & Buttons JS -->
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- 1. Initialize Descriptive Statistics DataTable ---
+        const tableStats = $('#table-stats').DataTable({
+            "ajax": {
+                "url": "{{ url_for('eda.statistics') }}",
+                "dataSrc": ""
+            },
+            "columns": [
+                { "data": "column", "className": "text-start fw-bold" },
+                { "data": "count" },
+                { "data": "mean" },
+                { "data": "median" },
+                { "data": "mode" },
+                { "data": "min" },
+                { "data": "max" },
+                { "data": "q1" },
+                { "data": "q3" },
+                { "data": "iqr" },
+                { "data": "std" },
+                { "data": "skewness" },
+                { "data": "kurtosis" }
+            ],
+            "dom": 'Bfrtip',
+            "buttons": [
+                { extend: 'copy', className: 'btn btn-outline-secondary btn-sm' },
+                { extend: 'csv', className: 'btn btn-outline-primary btn-sm' },
+                { extend: 'excel', className: 'btn btn-outline-success btn-sm' },
+                { extend: 'pdf', className: 'btn btn-outline-danger btn-sm' }
+            ],
+            "paging": false,
+            "info": false,
+            "searching": false,
+            "language": {
+                "url": "https://cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
+            }
+        });
+
+        // --- 2. Tab Event Listeners to Load Plots Dynamically ---
+        const tabEl = document.getElementById('dist-tab');
+        tabEl.addEventListener('shown.bs.tab', function (event) {
+            loadDistributionPlot();
+        });
+
+        const corrEl = document.getElementById('corr-tab');
+        corrEl.addEventListener('shown.bs.tab', function (event) {
+            loadCorrelationHeatmap();
+        });
+
+        const targetEl = document.getElementById('target-tab');
+        targetEl.addEventListener('shown.bs.tab', function (event) {
+            loadTargetAnalysis();
+        });
+
+        const tsEl = document.getElementById('ts-tab');
+        tsEl.addEventListener('shown.bs.tab', function (event) {
+            loadTimeSeriesPlots();
+        });
+
+        // --- 3. Dynamic Distribution Dropdown ---
+        const featureSelect = document.getElementById('feature-select');
+        featureSelect.addEventListener('change', loadDistributionPlot);
+
+        function loadDistributionPlot() {
+            const feat = featureSelect.value;
+            fetch(`{{ url_for('eda.distribution', feature='') }}${feat}`)
+                .then(res => res.json())
+                .then(data => {
+                    Plotly.newPlot('plotly-hist', data.histogram.data, data.histogram.layout, {responsive: true});
+                    Plotly.newPlot('plotly-box', data.boxplot.data, data.boxplot.layout, {responsive: true});
+                    Plotly.newPlot('plotly-kde', data.density.data, data.density.layout, {responsive: true});
+                    Plotly.newPlot('plotly-violin', data.violin.data, data.violin.layout, {responsive: true});
+                });
+        }
+
+        function loadCorrelationHeatmap() {
+            fetch("{{ url_for('eda.correlation_heatmap') }}")
+                .then(res => res.json())
+                .then(data => {
+                    Plotly.newPlot('plotly-heatmap', data.data, data.layout, {responsive: true});
+                });
+        }
+
+        function loadTargetAnalysis() {
+            fetch("{{ url_for('eda.target_analysis') }}")
+                .then(res => res.json())
+                .then(data => {
+                    Plotly.newPlot('target-hist', data.histogram.data, data.histogram.layout, {responsive: true});
+                    Plotly.newPlot('target-qq', data.qq.data, data.qq.layout, {responsive: true});
+                    Plotly.newPlot('target-box', data.boxplot.data, data.boxplot.layout, {responsive: true});
+                    Plotly.newPlot('target-trend', data.trend.data, data.trend.layout, {responsive: true});
+                });
+        }
+
+        function loadTimeSeriesPlots() {
+            fetch("{{ url_for('eda.timeseries_analysis') }}")
+                .then(res => res.json())
+                .then(data => {
+                    Plotly.newPlot('ts-cl80', data.cl80.data, data.cl80.layout, {responsive: true});
+                    Plotly.newPlot('ts-tss', data.tss.data, data.tss.layout, {responsive: true});
+                    Plotly.newPlot('ts-ph', data.ph.data, data.ph.layout, {responsive: true});
+                    Plotly.newPlot('ts-debit', data.debit.data, data.debit.layout, {responsive: true});
+                    Plotly.newPlot('ts-chem', data.chem.data, data.chem.layout, {responsive: true});
+                });
+        }
+    });
+
+    // --- Helper function to download Plotly charts as PNG ---
+    function downloadPlotly(elementId, filename) {
+        const gd = document.getElementById(elementId);
+        Plotly.downloadImage(gd, {
+            format: 'png',
+            width: 800,
+            height: 600,
+            filename: filename
+        });
+    }
+</script>
+{% endblock %}
