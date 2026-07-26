@@ -317,3 +317,231 @@ ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentu
 2026-07-26 23:26:17,057 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
 2026-07-26 23:26:19,305 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
 2026-07-26 23:26:30,211 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:35:08,379 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-26 23:36:02,690 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-26 23:44:29,230 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-26 23:44:30,355 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-26 23:44:39,604 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:44:41,547 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-26 23:45:21,909 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:45:28,967 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:45:36,567 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:45:44,139 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:47:17,414 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-26 23:48:44,343 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-26 23:57:03,993 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-26 23:58:50,035 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-27 00:10:56,037 - coagulant_app - ERROR - Batch prediction failed: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 250, in predict_batch
+    raise ValueError(
+        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+    )
+ValueError: Riwayat CL-80 tidak cukup sebelum 2025-06-01 00:00:00 untuk membentuk tiga lag.
+2026-07-27 00:13:40,455 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:14:09,615 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:15:10,684 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 427, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:15:10,750 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 449, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:15:19,401 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:15:24,375 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 427, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:15:24,453 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 449, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:15:24,465 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 459, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-27 00:15:38,845 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki 2 baris input numerik invalid (baris file: 3129, 3560).
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 395, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki 2 baris input numerik invalid (baris file: 3129, 3560).
+2026-07-27 00:16:37,665 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:16:43,084 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 433, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:16:43,177 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 455, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:16:43,185 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 465, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-27 00:16:56,188 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki 4980 Date/Time yang tidak dapat diinterpretasi.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 420, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki 4980 Date/Time yang tidak dapat diinterpretasi.
+2026-07-27 00:17:15,053 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:17:21,905 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 437, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:17:21,998 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 459, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:17:22,007 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 469, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-27 00:18:26,386 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:18:42,105 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 437, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:18:42,199 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 459, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:18:42,206 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 461, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+2026-07-27 00:18:42,215 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 469, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-27 00:18:47,314 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-27 00:18:48,418 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-27 00:19:44,809 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:19:46,580 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:20:54,721 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-27 00:21:22,589 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-27 00:21:57,118 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:22:08,661 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 00:22:12,110 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 436, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:22:12,260 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 458, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:22:12,274 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 460, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+2026-07-27 00:22:12,293 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 468, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-27 00:22:15,548 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 436, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-27 00:22:15,667 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 458, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-27 00:22:15,677 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 460, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+2026-07-27 00:22:15,688 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Outside Work\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 468, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-27 00:22:21,651 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-27 00:22:23,090 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.

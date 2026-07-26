@@ -20,6 +20,27 @@ from utils.helpers import (
 from utils.logger import app_logger
 
 
+BATCH_TARGET_ALIASES = (
+    REQUIRED_TARGET,
+    "Dosis CL-80",
+    "CL-80",
+    "CL80 Dose",
+)
+MANUAL_LAG_COLUMNS = (
+    "Dosis T1",
+    "Dosis T2",
+    "Dosis T3",
+    "Kolom T1",
+    "Kolom T2",
+    "Kolom T3",
+)
+BATCH_HISTORY_ERROR = (
+    "Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama "
+    "yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal "
+    "tiga baris awal dengan nilai Dosis CL-80 sebagai seed history."
+)
+
+
 class WastewaterPredictor:
     """Compatible 11-feature inference, chronological lags, batch prediction, and LOCO."""
 
@@ -165,6 +186,10 @@ class WastewaterPredictor:
     def _sanitize_batch(df):
         clean = df.copy()
         clean.columns = [str(column).strip() for column in clean.columns]
+        if len(set(clean.columns)) != len(clean.columns):
+            raise ValueError(
+                "Nama kolom batch duplikat setelah spasi nama kolom dibersihkan."
+            )
         alum, lime = OPTIONAL_CHEMICAL_COLUMNS
         presence = [column in clean.columns for column in OPTIONAL_CHEMICAL_COLUMNS]
         summary = {
@@ -201,84 +226,379 @@ class WastewaterPredictor:
         summary["final_active_row_count"] = int(len(clean))
         return clean, summary
 
+    @staticmethod
+    def _parse_timestamps(frame):
+        date_text = frame["Date"].astype(str).str.strip()
+        time_text = frame["Time"].astype(str).str.strip()
+        parsed_dates = pd.Series(pd.NaT, index=frame.index, dtype="datetime64[ns]")
+        for date_format in (
+            "%Y-%m-%d",
+            "%Y-%m-%d %H:%M:%S",
+            "%d-%b-%y",
+            "%d-%b-%Y",
+            "%d/%m/%Y",
+            "%Y/%m/%d",
+        ):
+            unresolved = parsed_dates.isna()
+            if not unresolved.any():
+                break
+            parsed_dates.loc[unresolved] = pd.to_datetime(
+                date_text.loc[unresolved],
+                format=date_format,
+                errors="coerce",
+            )
+
+        normalized_time = time_text.where(
+            ~time_text.str.fullmatch(r"\d{1,2}:\d{2}"),
+            time_text + ":00",
+        )
+        parsed_times = pd.to_timedelta(normalized_time, errors="coerce")
+        numeric_times = pd.to_numeric(time_text, errors="coerce")
+        numeric_mask = parsed_times.isna() & numeric_times.between(0, 1, inclusive="left")
+        parsed_times.loc[numeric_mask] = pd.to_timedelta(
+            numeric_times.loc[numeric_mask], unit="D"
+        )
+        return parsed_dates.dt.normalize() + parsed_times
+
+    @staticmethod
+    def _exact_alias(columns, aliases):
+        lookup = {str(column).strip().casefold(): column for column in columns}
+        matches = []
+        for alias in aliases:
+            match = lookup.get(alias.casefold())
+            if match is not None and match not in matches:
+                matches.append(match)
+        if len(matches) > 1:
+            raise ValueError(
+                "Batch memiliki lebih dari satu kolom riwayat CL-80 yang dikenali: "
+                + ", ".join(matches)
+            )
+        return matches[0] if matches else None
+
+    def _active_history_before(self, batch_start):
+        path = get_dataset_path()
+        if not os.path.exists(path):
+            return []
+        history = pd.read_csv(path)
+        required = {"Date", "Time", REQUIRED_TARGET}
+        if not required.issubset(history.columns):
+            return []
+        history["Timestamp"] = self._parse_timestamps(history)
+        history["Dose"] = pd.to_numeric(history[REQUIRED_TARGET], errors="coerce")
+        history = history.loc[
+            history["Timestamp"].notna()
+            & history["Dose"].notna()
+            & history["Dose"].gt(0)
+            & history["Timestamp"].lt(batch_start),
+            ["Timestamp", "Dose"],
+        ]
+        history = history.loc[
+            ~history["Timestamp"].duplicated(keep=False)
+        ].sort_values("Timestamp", kind="mergesort")
+        return history.tail(3).to_dict("records") if len(history) >= 3 else []
+
+    def _prediction_history_before(self, batch_start, model_name):
+        candidates = []
+        paths = [
+            os.path.join(
+                Config.OUTPUT_FOLDER,
+                "prediksi",
+                "riwayat_prediksi_akumulatif.csv",
+            ),
+            os.path.join(
+                Config.UPLOAD_FOLDER,
+                "output",
+                "prediksi",
+                "riwayat_prediksi_akumulatif.csv",
+            ),
+        ]
+        for path in paths:
+            if not os.path.exists(path):
+                continue
+            history = pd.read_csv(path)
+            required = {
+                "Prediction_Timestamp",
+                "Predicted_Dosis_CL80_ppm",
+                "Model",
+            }
+            if not required.issubset(history.columns):
+                continue
+            timestamps = pd.to_datetime(
+                history["Prediction_Timestamp"], errors="coerce"
+            )
+            doses = pd.to_numeric(
+                history["Predicted_Dosis_CL80_ppm"], errors="coerce"
+            )
+            compatible = history["Model"].astype(str).eq(str(model_name))
+            valid = (
+                timestamps.notna()
+                & timestamps.lt(batch_start)
+                & doses.notna()
+                & doses.gt(0)
+                & compatible
+            )
+            candidates.extend(
+                {
+                    "Timestamp": timestamp,
+                    "Dose": float(dose),
+                }
+                for timestamp, dose in zip(timestamps.loc[valid], doses.loc[valid])
+            )
+        if not candidates:
+            return []
+        history = (
+            pd.DataFrame(candidates)
+            .sort_values("Timestamp", kind="mergesort")
+            .drop_duplicates(subset=["Timestamp"], keep=False)
+        )
+        return history.tail(3).to_dict("records") if len(history) >= 3 else []
+
+    def _resolve_external_history(self, batch_start, model_name):
+        active = self._active_history_before(batch_start)
+        if len(active) == 3:
+            return active, "active dataset"
+        predictions = self._prediction_history_before(batch_start, model_name)
+        if len(predictions) == 3:
+            return predictions, "prediction history"
+        return [], None
+
     def predict_batch(self, file_path):
         try:
-            model, preprocessor, _ = self._load_artifacts()
+            model, preprocessor, metadata = self._load_artifacts()
             source = (
                 pd.read_excel(file_path)
                 if str(file_path).lower().endswith(".xlsx")
                 else pd.read_csv(file_path)
             )
             clean, sanitization = self._sanitize_batch(source)
+            if clean.empty:
+                raise ValueError("Batch tidak memiliki baris yang layak setelah sanitasi.")
+
             required = ["Date", "Time"] + BASE_INPUT_FEATURES
             missing = [column for column in required if column not in clean.columns]
             if missing:
                 raise ValueError("Kolom batch wajib tidak lengkap: " + ", ".join(missing))
+
+            target_column = self._exact_alias(clean.columns, BATCH_TARGET_ALIASES)
+            manual_lag_columns = [
+                column for column in MANUAL_LAG_COLUMNS if column in clean.columns
+            ]
+            clean = clean.drop(columns=manual_lag_columns, errors="ignore")
+            warnings = []
+            if manual_lag_columns:
+                warnings.append(
+                    "Kolom lag manual diabaikan; T1, T2, dan T3 dibentuk otomatis: "
+                    + ", ".join(manual_lag_columns)
+                )
+
             for column in BASE_INPUT_FEATURES:
                 clean[column] = pd.to_numeric(clean[column], errors="coerce")
-            clean["Timestamp"] = pd.to_datetime(
-                clean["Date"].astype(str).str.strip()
-                + " "
-                + clean["Time"].astype(str).str.strip(),
-                errors="coerce",
+            invalid_numeric = clean[BASE_INPUT_FEATURES].isna().any(axis=1)
+            clean["_Validation_Error"] = ""
+            clean.loc[invalid_numeric, "_Validation_Error"] = (
+                "Input operasional harus numerik dan lengkap."
             )
+            invalid_ranges = (
+                clean["Inlet TSS (mg/L)"].lt(0)
+                | clean["Outlet TSS (mg/L)"].lt(0)
+                | clean["Inlet Disch (m3/s)"].lt(0)
+                | ~clean["Inlet pH"].between(0, 14)
+                | ~clean["Outlet pH"].between(0, 14)
+            ) & ~invalid_numeric
+            if invalid_ranges.any():
+                clean.loc[invalid_ranges, "_Validation_Error"] = (
+                    "Input operasional berada di luar rentang yang valid."
+                )
+            invalid_input_count = int(
+                clean["_Validation_Error"].astype(bool).sum()
+            )
+            if invalid_input_count:
+                warnings.append(
+                    f"{invalid_input_count} baris input invalid ditandai dan tidak "
+                    "digunakan untuk prediksi maupun lag."
+                )
+
+            clean["Timestamp"] = self._parse_timestamps(clean)
             if clean["Timestamp"].isna().any():
-                raise ValueError("Batch memiliki Date/Time yang tidak dapat diinterpretasi.")
-            clean = clean.sort_values("Timestamp", kind="mergesort").drop_duplicates().reset_index(drop=True)
+                raise ValueError(
+                    f"Batch memiliki {int(clean['Timestamp'].isna().sum())} Date/Time "
+                    "yang tidak dapat diinterpretasi."
+                )
+            duplicate_timestamps = clean["Timestamp"].duplicated(keep=False)
+            if duplicate_timestamps.any():
+                duplicates = (
+                    clean.loc[duplicate_timestamps, "Timestamp"]
+                    .dt.strftime("%Y-%m-%d %H:%M:%S")
+                    .drop_duplicates()
+                    .head(5)
+                    .tolist()
+                )
+                raise ValueError(
+                    "Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: "
+                    + ", ".join(duplicates)
+                )
+            input_reordered = not clean["Timestamp"].is_monotonic_increasing
+            clean = clean.sort_values("Timestamp", kind="mergesort").reset_index(drop=True)
+            if input_reordered:
+                warnings.append(
+                    "Baris batch diurutkan naik berdasarkan timestamp sebelum lag dibentuk."
+                )
 
-            active = pd.read_csv(get_dataset_path())
-            active[REQUIRED_TARGET] = pd.to_numeric(active[REQUIRED_TARGET], errors="coerce")
-            active_timestamp = pd.to_datetime(
-                active["Date"].astype(str) + " " + active["Time"].astype(str), errors="coerce"
+            external_history, history_source = self._resolve_external_history(
+                clean["Timestamp"].iloc[0],
+                metadata.get("best_model"),
             )
-            history = active.loc[
-                active[REQUIRED_TARGET].notna() & (active[REQUIRED_TARGET] > 0),
-                [REQUIRED_TARGET],
-            ].copy()
-            history["Timestamp"] = active_timestamp.loc[history.index]
-            history = history.dropna(subset=["Timestamp"]).sort_values("Timestamp")
 
-            predictions = []
-            lag_records = []
-            evolving_history = [
-                (timestamp, float(dose))
-                for timestamp, dose in zip(history["Timestamp"], history[REQUIRED_TARGET])
-            ]
-            for _, record in clean.iterrows():
-                prior = [dose for timestamp, dose in evolving_history if timestamp < record["Timestamp"]]
-                if len(prior) < 3:
+            seed_count = 0
+            first_prediction_index = 0
+            if external_history:
+                lag_buffer = [float(item["Dose"]) for item in external_history]
+            else:
+                if target_column is None:
+                    raise ValueError(BATCH_HISTORY_ERROR)
+                if len(clean) < 4:
                     raise ValueError(
-                        f"Riwayat CL-80 tidak cukup sebelum {record['Timestamp']} untuk membentuk tiga lag."
+                        BATCH_HISTORY_ERROR
+                        + " File batch juga harus memiliki sedikitnya satu baris untuk diprediksi."
                     )
-                lags = {"Kolom T1": prior[-1], "Kolom T2": prior[-2], "Kolom T3": prior[-3]}
+                seed_values = pd.to_numeric(
+                    clean.loc[:2, target_column], errors="coerce"
+                )
+                if seed_values.isna().any() or seed_values.le(0).any():
+                    raise ValueError(
+                        "Tiga baris awal yang akan digunakan sebagai seed history harus "
+                        "memiliki nilai Dosis CL-80 numerik dan positif."
+                    )
+                if clean.loc[:2, "_Validation_Error"].astype(bool).any():
+                    raise ValueError(
+                        "Tiga baris awal seed history harus memiliki input operasional "
+                        "yang valid dan lengkap."
+                    )
+                lag_buffer = seed_values.astype(float).tolist()
+                seed_count = 3
+                first_prediction_index = 3
+                history_source = "batch seed"
+                warnings.append(
+                    "Riwayat eksternal tidak mencukupi; tiga baris awal digunakan sebagai "
+                    "seed history dan tidak diprediksi."
+                )
+
+            output_rows = []
+            for index, record in clean.iterrows():
                 inputs = {feature: record[feature] for feature in BASE_INPUT_FEATURES}
+                feature_row = self.build_feature_row(inputs).iloc[0].to_dict()
+                is_invalid = bool(record["_Validation_Error"])
+                output = {
+                    "Date": record["Timestamp"].strftime("%Y-%m-%d"),
+                    "Time": record["Timestamp"].strftime("%H:%M:%S"),
+                    "Timestamp": record["Timestamp"],
+                    "Prediction_Status": (
+                        "Seed history"
+                        if index < first_prediction_index
+                        else "Invalid"
+                        if is_invalid
+                        else "Predicted"
+                    ),
+                    "Validation_Message": record["_Validation_Error"] or "",
+                    **{feature: float(record[feature]) for feature in BASE_INPUT_FEATURES},
+                    "Kolom T1": np.nan,
+                    "Kolom T2": np.nan,
+                    "Kolom T3": np.nan,
+                    "Efisiensi_TSS": feature_row["Efisiensi_TSS"],
+                    "Delta_pH": feature_row["Delta_pH"],
+                    "Beban_TSS": feature_row["Beban_TSS"],
+                    "Historical_Dosis_CL80_ppm": np.nan,
+                    "Predicted_Dosis_CL80_ppm": np.nan,
+                    "Seed_Source": history_source,
+                }
+                if index < first_prediction_index:
+                    output["Historical_Dosis_CL80_ppm"] = float(
+                        clean.loc[index, target_column]
+                    )
+                    output_rows.append(output)
+                    continue
+                if is_invalid:
+                    output_rows.append(output)
+                    continue
+
+                lags = {
+                    "Kolom T1": lag_buffer[-1],
+                    "Kolom T2": lag_buffer[-2],
+                    "Kolom T3": lag_buffer[-3],
+                }
                 inputs.update(lags)
                 row = self.build_feature_row(inputs)
                 prediction = max(0.0, float(model.predict(preprocessor.transform(row))[0]))
-                predictions.append(prediction)
-                lag_records.append(lags)
-                evolving_history.append((record["Timestamp"], prediction))
+                output.update(lags)
+                output["Predicted_Dosis_CL80_ppm"] = prediction
+                output_rows.append(output)
+                lag_buffer.append(prediction)
 
-            for lag in ["Kolom T1", "Kolom T2", "Kolom T3"]:
-                clean[lag] = [values[lag] for values in lag_records]
-            clean["Predicted_Dosis_CL80_ppm"] = np.round(predictions, 4)
-            forbidden = forbidden_chemical_columns(clean.columns)
+            output = pd.DataFrame(output_rows)
+            forbidden = forbidden_chemical_columns(output.columns)
             if forbidden:
                 raise ValueError("Ekspor batch masih mengandung kolom kimia.")
 
             prediction_dir = os.path.join(Config.UPLOAD_FOLDER, "predictions")
             os.makedirs(prediction_dir, exist_ok=True)
-            clean.to_csv(os.path.join(prediction_dir, "batch_predictions.csv"), index=False)
-            clean.to_excel(os.path.join(prediction_dir, "batch_predictions.xlsx"), index=False)
+            output.to_csv(
+                os.path.join(prediction_dir, "batch_predictions.csv"), index=False
+            )
+            output.to_excel(
+                os.path.join(prediction_dir, "batch_predictions.xlsx"), index=False
+            )
+            predicted_count = int(
+                output["Prediction_Status"].eq("Predicted").sum()
+            )
+            invalid_rows = int(
+                sanitization["ambiguous_chemical_row_count"] + invalid_input_count
+            )
+            skipped_rows = int(
+                sanitization["original_row_count"] - sanitization["final_active_row_count"]
+            )
+            first_predicted = output.loc[
+                output["Prediction_Status"].eq("Predicted"), "Timestamp"
+            ].min()
+            summary = {
+                "total_uploaded_rows": int(sanitization["original_row_count"]),
+                "sanitized_rows": int(len(clean)),
+                "seed_rows_used": seed_count,
+                "predicted_rows": predicted_count,
+                "skipped_rows": skipped_rows,
+                "invalid_rows": invalid_rows,
+                "invalid_input_rows": invalid_input_count,
+                "ambiguous_chemical_rows": int(
+                    sanitization["ambiguous_chemical_row_count"]
+                ),
+                "excluded_alum_lime_rows": int(
+                    sanitization["excluded_alum_lime_row_count"]
+                ),
+                "history_source": history_source,
+                "first_predicted_timestamp": (
+                    first_predicted.isoformat(sep=" ")
+                    if pd.notna(first_predicted)
+                    else None
+                ),
+                "input_reordered": input_reordered,
+                "manual_lag_columns_ignored": manual_lag_columns,
+            }
+            preview = output.head(10).astype(object)
+            preview = preview.where(pd.notna(preview), None)
             return {
                 "success": True,
                 "csv_filename": "batch_predictions.csv",
                 "xlsx_filename": "batch_predictions.xlsx",
-                "preview_cols": list(clean.columns),
-                "preview_data": clean.head(10).values.tolist(),
-                "rows": len(clean),
+                "preview_cols": list(output.columns),
+                "preview_data": preview.values.tolist(),
+                "rows": len(output),
                 "sanitization": sanitization,
+                "summary": summary,
+                "warnings": warnings,
             }
         except Exception as error:
             app_logger.error("Batch prediction failed: %s", error, exc_info=True)
-            return {"success": False, "error": str(error)}
+            return {
+                "success": False,
+                "error": str(error),
+                "error_category": "validation",
+            }

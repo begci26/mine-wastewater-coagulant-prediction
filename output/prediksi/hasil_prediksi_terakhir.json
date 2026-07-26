@@ -1,0 +1,37 @@
+{
+  "prediction": {
+    "Date": "2027-01-01",
+    "Time": "12:00",
+    "Inlet TSS (mg/L)": 650.0,
+    "Inlet pH": 7.2,
+    "Outlet TSS (mg/L)": 105.0,
+    "Outlet pH": 7.4,
+    "Inlet Disch (m3/s)": 1.7,
+    "Kolom T1": 1.092896174863388,
+    "Kolom T2": 1.092896174863388,
+    "Kolom T3": 1.092896174863388,
+    "Efisiensi_TSS": 83.84615384615385,
+    "Delta_pH": 0.20000000000000018,
+    "Beban_TSS": 1105.0,
+    "Predicted_Dosis_CL80_ppm": 1.943,
+    "Model": "XGBoost",
+    "Prediction_Timestamp": "2027-01-01 12:00"
+  },
+  "local_interpretation": {
+    "method": "LOCO-based reference-value perturbation",
+    "contribution_ppm": {
+      "Inlet TSS (mg/L)": 0.0804,
+      "Inlet pH": -0.0736,
+      "Outlet TSS (mg/L)": -0.0106,
+      "Outlet pH": -0.0378,
+      "Inlet Disch (m3/s)": 0.0398,
+      "Kolom T1": -0.1704,
+      "Kolom T2": -0.0315,
+      "Kolom T3": 0.0016,
+      "Efisiensi_TSS": 0.0681,
+      "Delta_pH": 0.0171,
+      "Beban_TSS": -0.0088
+    },
+    "causal_effect": false
+  }
+}

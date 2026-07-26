@@ -7,6 +7,14 @@ def create_app():
     """Application factory method to configure and initialize Flask."""
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    @app.template_filter("metric4")
+    def format_metric_for_ui(value):
+        """Format a metric for compact UI display without mutating its stored precision."""
+        try:
+            return f"{float(value):.4f}"
+        except (TypeError, ValueError):
+            return "N/A"
     
     # Register Blueprints
     from routes.dashboard import dashboard_bp

@@ -301,6 +301,8 @@ def batch():
         if result.get("success"):
             session["batch_prediction_result"] = result
             flash("Prediksi batch selesai dan ekspornya telah disanitasi.", "success")
+            for warning in result.get("warnings", []):
+                flash(warning, "warning")
         else:
             flash(f"Prediksi batch gagal: {result.get('error')}", "danger")
     finally:

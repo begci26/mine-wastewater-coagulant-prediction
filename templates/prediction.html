@@ -239,13 +239,13 @@
                     <!-- Interpretasi LOCO -->
                     <div class="col-lg-5 d-flex flex-column justify-content-between">
                         <div>
-                            <div class="alert alert-secondary border-0 small text-muted p-3 text-start">
-                                <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;"><i class="fas fa-info-circle me-1 text-primary"></i>Peringkat Kontribusi Variabel:</h6>
-                                <p class="m-0 text-dark mb-2" style="font-size: 0.8rem;">Variabel dengan tingkat pengaruh terbesar pada perhitungan prediksi dosis sampel ini:</p>
-                                <ul class="ps-3 mb-0" id="loco-list" style="font-size: 0.8rem; line-height: 1.5;">
+                            <section class="contribution-ranking p-3 text-start" aria-labelledby="contribution-ranking-title">
+                                <h6 class="fw-bold mb-2 contribution-ranking-title" id="contribution-ranking-title"><i class="fas fa-info-circle me-1 text-primary"></i>Peringkat Kontribusi Variabel:</h6>
+                                <p class="mb-2 contribution-ranking-description">Variabel dengan tingkat pengaruh terbesar pada perhitungan prediksi dosis sampel ini:</p>
+                                <ul class="list-unstyled mb-0 contribution-list" id="loco-list">
                                     <!-- Dynamic JS injection here -->
                                 </ul>
-                            </div>
+                            </section>
                         </div>
                         <!-- Kesimpulan -->
                         <div>
@@ -308,17 +308,24 @@
     <div class="col-12 mb-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white py-3">
-                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-file-excel text-primary me-2"></i>Prediksi Batch Dosis CL-80 via File CSV</h5>
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-file-excel text-primary me-2"></i>Prediksi Batch Dosis CL-80 via File CSV/XLSX</h5>
             </div>
             <div class="card-body text-start">
+                <div class="alert alert-info border-0 shadow-xs small text-dark" role="note">
+                    <i class="fas fa-info-circle me-1 text-primary"></i>
+                    Model memerlukan tiga riwayat dosis CL-80 untuk membentuk T1, T2, dan T3.
+                    Sistem akan mengambil riwayat dari dataset aktif. Jika tidak tersedia,
+                    tiga baris awal pada file batch yang memiliki nilai Dosis CL-80 dapat
+                    digunakan sebagai <em>seed history</em>, dan prediksi dimulai dari baris keempat.
+                </div>
                 <div class="row">
                     <div class="col-lg-6 border-end">
-                        <p class="small text-muted">Unggah berkas CSV yang berisi parameter air limbah tambang harian untuk melakukan kalkulasi prediksi dosis CL-80 secara massal menggunakan model terbaik.</p>
+                        <p class="small text-muted">Unggah berkas CSV atau XLSX yang berisi parameter air limbah tambang untuk melakukan prediksi dosis CL-80 secara berurutan.</p>
                         <form action="{{ url_for('prediction.batch') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoading('Sedang memproses prediksi batch...');">
                             <div class="mb-3">
-                                <label for="batch_file" class="form-label fw-semibold text-dark">Pilih Berkas CSV</label>
-                                <input class="form-control form-control-sm" type="file" id="batch_file" name="batch_file" accept=".csv" required>
-                                <div class="form-text text-muted" style="font-size: 0.75rem;">Format kolom harus sesuai dengan standard dataset penelitian tesis.</div>
+                                <label for="batch_file" class="form-label fw-semibold text-dark">Pilih Berkas CSV atau XLSX</label>
+                                <input class="form-control form-control-sm" type="file" id="batch_file" name="batch_file" accept=".csv,.xlsx" required>
+                                <div class="form-text text-muted" style="font-size: 0.75rem;">Kolom lag manual akan diabaikan. Sistem membentuk lag dari riwayat kronologis yang tervalidasi.</div>
                             </div>
                             <button type="submit" class="btn btn-primary btn-sm shadow-sm fw-bold">
                                 <i class="fas fa-upload me-2"></i>Proses Prediksi Batch
@@ -329,7 +336,21 @@
                         {% if batch_result %}
                         <div class="alert alert-success border-0 shadow-xs mb-0 p-3">
                             <h6 class="fw-bold mb-1 text-success"><i class="fas fa-check-circle me-1"></i>Prediksi Batch Berhasil!</h6>
-                            <p class="small text-dark mb-3">Model telah memproses sebanyak <strong>{{ batch_result.rows }} baris data</strong>.</p>
+                            <p class="small text-dark mb-2">
+                                Sumber riwayat: <strong>{{ batch_result.summary.history_source }}</strong><br>
+                                Seed: <strong>{{ batch_result.summary.seed_rows_used }}</strong> ·
+                                Diprediksi: <strong>{{ batch_result.summary.predicted_rows }}</strong> ·
+                                Dilewati: <strong>{{ batch_result.summary.skipped_rows }}</strong> ·
+                                Invalid: <strong>{{ batch_result.summary.invalid_rows }}</strong><br>
+                                Prediksi pertama: <strong>{{ batch_result.summary.first_predicted_timestamp }}</strong>
+                            </p>
+                            {% if batch_result.warnings %}
+                            <div class="alert alert-warning py-2 px-3 small text-start mb-3">
+                                {% for warning in batch_result.warnings %}
+                                <div><i class="fas fa-exclamation-triangle me-1"></i>{{ warning }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                             <div class="d-flex justify-content-center gap-2">
                                 <a href="{{ url_for('prediction.download', file_type='csv') }}" class="btn btn-sm btn-success fw-bold shadow-xs">
                                     <i class="fas fa-download me-1"></i>Unduh CSV
@@ -364,9 +385,22 @@
                                 {% for row in batch_result.preview_data %}
                                 <tr>
                                     {% for val in row %}
+                                    {% set col = batch_result.preview_cols[loop.index0] %}
                                     <td>
-                                        {% if loop.index == row|length %}
-                                        <span class="text-primary fw-bold">{{ val }} ppm</span>
+                                        {% if val is none %}
+                                        <span class="text-muted">—</span>
+                                        {% elif col == 'Predicted_Dosis_CL80_ppm' %}
+                                        <span class="text-primary fw-bold">{{ '%.4f'|format(val|float) }} ppm</span>
+                                        {% elif col == 'Historical_Dosis_CL80_ppm' %}
+                                        <span class="text-secondary fw-semibold">{{ '%.4f'|format(val|float) }} ppm</span>
+                                        {% elif col in ['Kolom T1', 'Kolom T2', 'Kolom T3'] %}
+                                        {{ '%.4f'|format(val|float) }}
+                                        {% elif col == 'Prediction_Status' and val == 'Seed history' %}
+                                        <span class="badge bg-warning text-dark">{{ val }}</span>
+                                        {% elif col == 'Prediction_Status' and val == 'Invalid' %}
+                                        <span class="badge bg-danger">{{ val }}</span>
+                                        {% elif col == 'Prediction_Status' %}
+                                        <span class="badge bg-success">{{ val }}</span>
                                         {% else %}
                                         {{ val }}
                                         {% endif %}
@@ -578,12 +612,22 @@
                 x_vals.push(contribution);
                 y_vals.push(feat);
                 colors.push(contribution >= 0 ? '#10b981' : '#ef4444');
-                text_vals.push(`${contribution > 0 ? '+' : ''}${contribution} ppm`);
+                const displayContribution = Number(contribution).toFixed(4);
+                text_vals.push(`${contribution > 0 ? '+' : ''}${displayContribution} ppm`);
                 
                 if (index < 5) {
                     const li = document.createElement('li');
-                    const badgeClass = contribution >= 0 ? 'text-success' : 'text-danger';
-                    li.innerHTML = `Fitur <strong>${feat}</strong>: <span class="${badgeClass} fw-bold">${contribution > 0 ? '+' : ''}${contribution} ppm</span> (baseline minus prediksi terperturbasi).`;
+                    const direction = contribution > 0 ? 'positive' : (contribution < 0 ? 'negative' : 'neutral');
+                    const directionLabel = contribution > 0 ? 'Menaikkan dosis' : (contribution < 0 ? 'Menurunkan dosis' : 'Netral');
+                    const directionSymbol = contribution > 0 ? '↑' : (contribution < 0 ? '↓' : '—');
+                    li.className = `contribution-item contribution-${direction}`;
+                    li.innerHTML = `
+                        <div class="contribution-feature">#${index + 1} <strong>${feat}</strong></div>
+                        <div class="contribution-detail">
+                            <span class="contribution-value">${contribution > 0 ? '+' : ''}${displayContribution} ppm</span>
+                            <span class="contribution-direction">${directionSymbol} ${directionLabel}</span>
+                        </div>
+                    `;
                     locoList.appendChild(li);
                 }
             });

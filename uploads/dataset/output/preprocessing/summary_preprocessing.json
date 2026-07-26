@@ -262,7 +262,7 @@
     },
     "fit_scope": "training_period_only"
   },
-  "waktu_eksekusi": "2026-07-26T23:16:41.137543",
+  "waktu_eksekusi": "2026-07-26T23:30:33.319143",
   "jumlah_baris_akhir": 2531,
   "jumlah_kolom_akhir": 15,
   "missing_value_akhir_sebelum_train_imputation": 0,

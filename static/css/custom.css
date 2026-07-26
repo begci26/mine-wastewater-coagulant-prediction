@@ -168,6 +168,92 @@ body {
     margin: 1rem 0;
 }
 
+/* Accessible light panel for the local contribution ranking. */
+.contribution-ranking {
+    min-width: 0;
+    color: #1f2937;
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--border-radius-sm);
+}
+
+.contribution-ranking-title {
+    color: #111827;
+    font-size: 0.9rem;
+}
+
+.contribution-ranking-description,
+.contribution-list {
+    color: #334155;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.contribution-item {
+    padding: 0.55rem 0.6rem;
+    border-radius: 0.375rem;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-wrap: anywhere;
+    transition: background-color 0.15s ease;
+}
+
+.contribution-item:last-child {
+    border-bottom: 0;
+}
+
+.contribution-item:hover {
+    background-color: #f1f5f9;
+}
+
+.contribution-feature {
+    color: #1f2937;
+}
+
+.contribution-detail {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    margin-top: 0.2rem;
+}
+
+.contribution-value,
+.contribution-direction {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.contribution-positive .contribution-value,
+.contribution-positive .contribution-direction {
+    color: #166534;
+}
+
+.contribution-negative .contribution-value,
+.contribution-negative .contribution-direction {
+    color: #b91c1c;
+}
+
+.contribution-neutral .contribution-value,
+.contribution-neutral .contribution-direction {
+    color: #475569;
+}
+
+.contribution-direction {
+    padding: 0.1rem 0.45rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background-color: #ffffff;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .contribution-detail {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 /* Progress and Steps */
 .step-container {
     display: flex;
