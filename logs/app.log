@@ -654,3 +654,84 @@ RuntimeError: simulated preprocessing failure
 2026-07-27 13:40:25,551 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
 2026-07-27 13:40:25,633 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
 2026-07-27 13:40:44,668 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-27 13:54:30,375 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:54:30,998 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:54:53,061 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:54:53,691 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:55:14,538 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:55:15,395 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:56:00,416 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:56:00,716 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:56:13,987 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 626, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-27 13:56:50,555 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:56:51,019 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:56:59,954 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 626, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-27 13:57:02,239 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-27 13:57:44,071 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:57:44,568 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 13:57:49,393 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 626, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-27 13:57:51,794 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-27 14:01:02,066 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 14:01:02,434 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 14:03:45,258 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 14:03:46,045 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 14:05:17,206 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-27 14:28:30,991 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 14:28:31,358 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...

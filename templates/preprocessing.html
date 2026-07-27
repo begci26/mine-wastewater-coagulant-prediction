@@ -1,835 +1,1296 @@
-{% extends 'base.html' %}
-
-{% block title %}Prapemrosesan Data & Feature Engineering{% endblock %}
-
-{% block breadcrumb %}Prapemrosesan{% endblock %}
-
-{% block extra_css %}
+{% extends 'base.html' %} {% block title %}Prapemrosesan Data & Feature
+Engineering{% endblock %} {% block breadcrumb %}Prapemrosesan{% endblock %} {%
+block extra_css %}
 <!-- DataTables Bootstrap 5 CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css"
+/>
 <style>
-    /* Stepper Styling */
-    .stepper-container {
-        padding: 20px 0;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 2rem;
-    }
-    .stepper {
-        display: flex;
-        justify-content: space-between;
-        position: relative;
-        max-width: 900px;
-        margin: 0 auto;
-    }
-    .stepper::before {
-        content: "";
-        position: absolute;
-        top: 25px;
-        left: 0;
-        height: 4px;
-        width: 100%;
-        background-color: #e2e8f0;
-        z-index: 1;
-    }
-    .stepper-progress {
-        position: absolute;
-        top: 25px;
-        left: 0;
-        height: 4px;
-        background-color: #2563eb;
-        z-index: 2;
-        transition: width 0.4s ease;
-    }
-    .step-item {
-        position: relative;
-        z-index: 3;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-    }
-    .step-circle {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background-color: #fff;
-        border: 4px solid #e2e8f0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: 700;
-        color: #64748b;
-        transition: all 0.3s ease;
-        cursor: default;
-    }
-    .step-item.active .step-circle {
-        border-color: #2563eb;
-        color: #2563eb;
-        background-color: #f0f7ff;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
-    }
-    .step-item.completed .step-circle {
-        background-color: #2563eb;
-        border-color: #2563eb;
-        color: #fff;
-    }
-    .step-title {
-        margin-top: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #64748b;
-        text-align: center;
-    }
-    .step-item.active .step-title {
-        color: #2563eb;
-    }
-    .step-item.completed .step-title {
-        color: #0f172a;
-    }
-    
-    /* Process Card Highlight */
-    .process-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border-radius: 12px;
-        border: 1px solid rgba(0,0,0,0.06);
-    }
-    .process-card.active {
-        border-left: 5px solid #2563eb !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-    }
-    .process-card.inactive {
-        opacity: 0.65;
-        background-color: #f8fafc;
-    }
+  /* Stepper Styling */
+  .stepper-container {
+    padding: 20px 0;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+  }
+  .stepper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .stepper::before {
+    content: "";
+    position: absolute;
+    top: 25px;
+    left: 0;
+    height: 4px;
+    width: 100%;
+    background-color: #e2e8f0;
+    z-index: 1;
+  }
+  .stepper-progress {
+    position: absolute;
+    top: 25px;
+    left: 0;
+    height: 4px;
+    background-color: #2563eb;
+    z-index: 2;
+    transition: width 0.4s ease;
+  }
+  .step-item {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+  .step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 4px solid #e2e8f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    color: #64748b;
+    transition: all 0.3s ease;
+    cursor: default;
+  }
+  .step-item.active .step-circle {
+    border-color: #2563eb;
+    color: #2563eb;
+    background-color: #f0f7ff;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  }
+  .step-item.completed .step-circle {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+  }
+  .step-title {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-align: center;
+  }
+  .step-item.active .step-title {
+    color: #2563eb;
+  }
+  .step-item.completed .step-title {
+    color: #0f172a;
+  }
+
+  /* Process Card Highlight */
+  .process-card {
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  .process-card.active {
+    border-left: 5px solid #2563eb !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  }
+  .process-card.inactive {
+    opacity: 0.65;
+    background-color: #f8fafc;
+  }
 </style>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <div class="row">
-    <!-- Judul Halaman -->
-    <div class="col-12 mb-3">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div>
-                <h1 class="h3 mb-0 text-gray-800 fw-bold">Preprocessing & Feature Engineering</h1>
-                <p class="text-muted small">Kelola pembersihan data, konversi tipe data, penanganan missing value, outlier, rekayasa 7 fitur baru harian tambang.</p>
-            </div>
-            <form action="{{ url_for('preprocessing.reset') }}" method="POST" onsubmit="showLoading('Mereset prapemrosesan ke dataset mentah...');">
-                <button type="submit" class="btn btn-warning btn-sm shadow-sm text-dark fw-bold">
-                    <i class="fas fa-undo me-2"></i>Reset Pipeline
-                </button>
+  <!-- Judul Halaman -->
+  <div class="col-12 mb-3">
+    <div
+      class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+    >
+      <div>
+        <h1 class="h3 mb-0 text-gray-800 fw-bold">
+          Preprocessing & Feature Engineering
+        </h1>
+        <p class="text-muted small">
+          Kelola pembersihan data, konversi tipe data, penanganan missing value,
+          outlier, rekayasa 7 fitur baru harian tambang.
+        </p>
+      </div>
+      <form
+        action="{{ url_for('preprocessing.reset') }}"
+        method="POST"
+        onsubmit="showLoading('Mereset prapemrosesan ke dataset mentah...')"
+      >
+        <button
+          type="submit"
+          class="btn btn-warning btn-sm shadow-sm text-dark fw-bold"
+        >
+          <i class="fas fa-undo me-2"></i>Reset Pipeline
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stepper Progress -->
+  {% set step = 1 %} {% if state.scaler_applied %} {% set step = 7 %} {% elif
+  state.feature_engineering_applied %} {% set step = 6 %} {% elif
+  state.outliers_handled %} {% set step = 5 %} {% elif state.duplicates_handled
+  %} {% set step = 4 %} {% elif state.missing_handled %} {% set step = 3 %} {%
+  elif state.cleaning_applied %} {% set step = 2 %} {% endif %}
+
+  <div class="col-12 mb-4">
+    <div class="stepper-container">
+      <div class="stepper">
+        <div
+          class="stepper-progress"
+          style="width: {{ ((step - 1) / 5) * 100 }}%;"
+        ></div>
+
+        <div
+          class="step-item {% if step == 1 %}active{% elif step > 1 %}completed{% endif %}"
+        >
+          <div class="step-circle">
+            {% if step > 1 %}<i class="fas fa-check"></i>{% else %}1{% endif %}
+          </div>
+          <div class="step-title">Tipe & Clean</div>
+        </div>
+        <div
+          class="step-item {% if step == 2 %}active{% elif step > 2 %}completed{% endif %}"
+        >
+          <div class="step-circle">
+            {% if step > 2 %}<i class="fas fa-check"></i>{% else %}2{% endif %}
+          </div>
+          <div class="step-title">Missing Value</div>
+        </div>
+        <div
+          class="step-item {% if step == 3 %}active{% elif step > 3 %}completed{% endif %}"
+        >
+          <div class="step-circle">
+            {% if step > 3 %}<i class="fas fa-check"></i>{% else %}3{% endif %}
+          </div>
+          <div class="step-title">Duplikat</div>
+        </div>
+        <div
+          class="step-item {% if step == 4 %}active{% elif step > 4 %}completed{% endif %}"
+        >
+          <div class="step-circle">
+            {% if step > 4 %}<i class="fas fa-check"></i>{% else %}4{% endif %}
+          </div>
+          <div class="step-title">Outlier</div>
+        </div>
+        <div
+          class="step-item {% if step == 5 %}active{% elif step > 5 %}completed{% endif %}"
+        >
+          <div class="step-circle">
+            {% if step > 5 %}<i class="fas fa-check"></i>{% else %}5{% endif %}
+          </div>
+          <div class="step-title">Fitur Baru</div>
+        </div>
+        <div
+          class="step-item {% if step == 6 %}active{% elif step > 6 %}completed{% endif %}"
+        >
+          <div class="step-circle">
+            {% if step > 6 %}<i class="fas fa-check"></i>{% else %}6{% endif %}
+          </div>
+          <div class="step-title">Dataset Ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informasi Alur Preprocessing -->
+  <div class="col-12 mb-4">
+    <div
+      class="card border-0 shadow-sm bg-light-blue"
+      style="
+        border-left: 4px solid var(--primary-blue) !important;
+        background-color: #f0f7ff;
+      "
+    >
+      <div class="card-body py-3">
+        <h6 class="fw-bold text-primary mb-1">
+          <i class="fas fa-info-circle me-2"></i>Status Dimensi Data Aktif
+        </h6>
+        <p class="m-0 text-dark small">
+          Dimensi Data Awal:
+          <strong
+            >{{ state.initial_shape[0] }} baris x {{ state.initial_shape[1] }}
+            kolom</strong
+          >
+          | Dimensi Data Saat Ini:
+          <strong
+            >{{ state.current_shape[0] }} baris x {{ state.current_shape[1] }}
+            kolom</strong
+          >
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER LANGKAH-LANGKAH -->
+  <div class="col-12">
+    <!-- STEP 1: Validasi & Konversi Tipe Data -->
+    <div
+      class="card shadow-sm process-card mb-4 {% if step == 1 %}active{% else %}inactive{% endif %}"
+      id="step-1"
+    >
+      <div
+        class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold text-dark">
+          <span class="badge bg-primary me-2">1</span>Validasi Dataset &
+          Konversi Tipe Data
+        </h5>
+        <span
+          class="badge {% if state.has_fatal_conversion_errors %}bg-danger{% elif state.cleaning_applied %}bg-success{% else %}bg-secondary{% endif %} px-3"
+        >
+          {% if state.has_fatal_conversion_errors %}Diblokir{% elif
+          state.cleaning_applied %}Selesai{% else %}Menunggu Aksi{% endif %}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-5 border-end">
+            <h6 class="fw-bold text-dark small mb-2">
+              <i class="fas fa-sync text-primary me-1"></i>Konversi & Validasi
+              Otomatis:
+            </h6>
+            <ul class="small text-muted ps-3 mb-4">
+              <li>Date → datetime</li>
+              <li>Time → string time</li>
+              <li>TSS, pH, Debit, dan CL-80 → numerik</li>
+              <li>
+                Observasi telah diseleksi saat upload untuk kondisi tanpa bahan
+                kimia penunjang
+              </li>
+              <li>Eksklusi dosis CL-80 <= 0/null dan Inlet TSS > 2000 ppm</li>
+            </ul>
+            {% if step == 1 %}
+            <form
+              action="{{ url_for('preprocessing.step1_clean') }}"
+              method="POST"
+              onsubmit="
+                showLoading('Menjalankan validasi dan konversi tipe data...')
+              "
+            >
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-play me-2"></i>Jalankan Konversi
+              </button>
             </form>
+            {% else %}
+            <button class="btn btn-secondary btn-sm disabled">
+              <i class="fas fa-check me-2"></i>Telah Diterapkan
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-7">
+            {% if state.cleaning_applied or state.has_fatal_conversion_errors %}
+            <div class="border rounded p-3 bg-light">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i
+                  class="fas {% if state.has_fatal_conversion_errors %}fa-times-circle text-danger{% else %}fa-check-circle text-success{% endif %} me-1"
+                ></i
+                >Hasil Langkah 1:
+              </h6>
+              <ul class="small text-muted mb-0">
+                <li>
+                  Baris data awal: <strong>{{ state.initial_shape[0] }}</strong>
+                </li>
+                <li>
+                  Baris data tersisa:
+                  <strong>{{ state.current_shape[0] }}</strong>
+                </li>
+                <li>
+                  Baris yang dibuang (dosis 0/null, TSS > 2000):
+                  <strong class="text-danger"
+                    >{{ state.cleaning_removed_count }}</strong
+                  >
+                </li>
+                {% if state.type_conversion_errors %}
+                <li class="text-warning">
+                  Peringatan konversi tertangani:
+                  <code>{{ state.type_conversion_errors }}</code>
+                </li>
+                {% else %}
+                <li>
+                  Status Konversi:
+                  <span class="badge bg-success">Sukses (Tipe Float Aman)</span>
+                </li>
+                {% endif %} {% if state.has_fatal_conversion_errors %}
+                <li class="text-danger fw-bold">
+                  Pipeline dihentikan: {{ state.conversion_report.fatal_errors |
+                  join('; ') }}
+                </li>
+                {% endif %}
+                <li>Catatan: <code>{{ state.cleaning_message }}</code></li>
+              </ul>
+              {% if state.conversion_report.details %}
+              <div class="table-responsive mt-3">
+                <table class="table table-sm table-bordered align-middle mb-2">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kolom</th>
+                      <th>Baris / Timestamp</th>
+                      <th>Nilai Asli</th>
+                      <th>Akar Masalah</th>
+                      <th>Tindakan</th>
+                      <th>Status Akhir</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in state.conversion_report.details %}
+                    <tr>
+                      <td>{{ item.column }}</td>
+                      <td>
+                        {{ item.row_index }}{% if item.timestamp %}<br /><span
+                          class="text-muted"
+                          >{{ item.timestamp }}</span
+                        >{% endif %}
+                      </td>
+                      <td>
+                        <code
+                          >{{ item.original_value if item.original_value is not
+                          none else '(kosong)' }}</code
+                        >
+                      </td>
+                      <td>{{ item.root_cause }}</td>
+                      <td>{{ item.action }}</td>
+                      <td>
+                        <span
+                          class="badge {% if item.final_status == 'berhasil_dinormalisasi' %}bg-info{% elif item.final_status == 'dikeluarkan_invalid' %}bg-danger{% else %}bg-warning text-dark{% endif %}"
+                        >
+                          {{ item.final_status | replace('_', ' ') }}
+                        </span>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <a
+                  href="{{ url_for('preprocessing.download', file_type='conversion_csv') }}"
+                  class="btn btn-xs btn-outline-primary"
+                >
+                  <i class="fas fa-file-csv me-1"></i>Unduh Laporan Konversi CSV
+                </a>
+                <a
+                  href="{{ url_for('preprocessing.download', file_type='conversion_json') }}"
+                  class="btn btn-xs btn-outline-secondary"
+                >
+                  <i class="fas fa-file-code me-1"></i>Unduh Laporan Konversi
+                  JSON
+                </a>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fas fa-hourglass-start fs-3 mb-2"></i>
+              <p class="m-0">
+                Langkah ini akan melakukan validasi kolom wajib, penyesuaian
+                tipe float numerik, dan pembersihan awal data.
+              </p>
+            </div>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Stepper Progress -->
-    {% set step = 1 %}
-    {% if state.scaler_applied %}
-        {% set step = 7 %}
-    {% elif state.feature_engineering_applied %}
-        {% set step = 6 %}
-    {% elif state.outliers_handled %}
-        {% set step = 5 %}
-    {% elif state.duplicates_handled %}
-        {% set step = 4 %}
-    {% elif state.missing_handled %}
-        {% set step = 3 %}
-    {% elif state.cleaning_applied %}
-        {% set step = 2 %}
-    {% endif %}
-    
-    <div class="col-12 mb-4">
-        <div class="stepper-container">
-            <div class="stepper">
-                <div class="stepper-progress" style="width: {{ ((step - 1) / 5) * 100 }}%;"></div>
-                
-                <div class="step-item {% if step == 1 %}active{% elif step > 1 %}completed{% endif %}">
-                    <div class="step-circle">{% if step > 1 %}<i class="fas fa-check"></i>{% else %}1{% endif %}</div>
-                    <div class="step-title">Tipe & Clean</div>
-                </div>
-                <div class="step-item {% if step == 2 %}active{% elif step > 2 %}completed{% endif %}">
-                    <div class="step-circle">{% if step > 2 %}<i class="fas fa-check"></i>{% else %}2{% endif %}</div>
-                    <div class="step-title">Missing Value</div>
-                </div>
-                <div class="step-item {% if step == 3 %}active{% elif step > 3 %}completed{% endif %}">
-                    <div class="step-circle">{% if step > 3 %}<i class="fas fa-check"></i>{% else %}3{% endif %}</div>
-                    <div class="step-title">Duplikat</div>
-                </div>
-                <div class="step-item {% if step == 4 %}active{% elif step > 4 %}completed{% endif %}">
-                    <div class="step-circle">{% if step > 4 %}<i class="fas fa-check"></i>{% else %}4{% endif %}</div>
-                    <div class="step-title">Outlier</div>
-                </div>
-                <div class="step-item {% if step == 5 %}active{% elif step > 5 %}completed{% endif %}">
-                    <div class="step-circle">{% if step > 5 %}<i class="fas fa-check"></i>{% else %}5{% endif %}</div>
-                    <div class="step-title">Fitur Baru</div>
-                </div>
-                <div class="step-item {% if step == 6 %}active{% elif step > 6 %}completed{% endif %}">
-                    <div class="step-circle">{% if step > 6 %}<i class="fas fa-check"></i>{% else %}6{% endif %}</div>
-                    <div class="step-title">Dataset Ready</div>
-                </div>
+    <!-- STEP 2: Missing Value -->
+    <div
+      class="card shadow-sm process-card mb-4 {% if step == 2 %}active{% elif step < 2 %}inactive{% endif %}"
+      id="step-2"
+    >
+      <div
+        class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold text-dark">
+          <span class="badge bg-primary me-2">2</span>Penanganan Nilai Kosong
+          (Missing Value)
+        </h5>
+        <span
+          class="badge {{ missing_status.badge_class }} px-3"
+          data-status="{{ missing_status.code }}"
+        >
+          {{ missing_status.label }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-5 border-end">
+            <p class="small text-muted mb-3">{{ missing_status.message }}</p>
+            {% if missing_status.code in ['completed', 'completed_with_warning']
+            %}
+            <button class="btn btn-success btn-sm disabled">
+              <i class="fas fa-check me-2"></i>Telah Diterapkan
+            </button>
+            {% elif missing_status.code == 'processing' %}
+            <button class="btn btn-primary btn-sm disabled">
+              <i class="fas fa-spinner fa-spin me-2"></i>Sedang Diproses
+            </button>
+            {% elif missing_status.code == 'failed' %}
+            <button class="btn btn-danger btn-sm disabled">
+              <i class="fas fa-times me-2"></i>Gagal
+            </button>
+            {% else %}
+            <button class="btn btn-outline-info btn-sm disabled">
+              <i class="fas fa-cogs me-2"></i>Diterapkan Otomatis
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-7">
+            {% if missing_status.code in ['completed', 'completed_with_warning']
+            %}
+            <div class="border rounded p-3 bg-light">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i class="fas fa-list text-primary me-1"></i>Bukti Imputasi
+                Training-Only:
+              </h6>
+              {% if state.preprocessing_metadata.imputation.total_missing_before
+              == 0 %}
+              <div class="alert alert-success py-2 small mb-2">
+                Pemeriksaan selesai, tidak ditemukan nilai kosong yang perlu
+                diimputasi.
+              </div>
+              {% else %}
+              <div
+                class="table-responsive"
+                style="max-height: 200px; overflow-y: auto"
+              >
+                <table
+                  class="table table-sm table-hover text-center table-bordered bg-white small m-0"
+                  style="font-size: 0.75rem"
+                >
+                  <thead class="table-light">
+                    <tr>
+                      <th>Fitur</th>
+                      <th>Missing Train</th>
+                      <th>Missing Test</th>
+                      <th>Median Training</th>
+                      <th>Missing Setelah</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for col, info in state.missing_stats.items() %} {% if
+                    info.total_missing_before > 0 %}
+                    <tr>
+                      <td class="text-start fw-bold">{{ col }}</td>
+                      <td>{{ info.train_missing_before }}</td>
+                      <td>{{ info.test_missing_before }}</td>
+                      <td>{{ '%.6g'|format(info.training_median) }}</td>
+                      <td>{{ info.total_missing_after }}</td>
+                    </tr>
+                    {% endif %} {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              {% endif %}
+              <div class="mt-2 pt-2 border-top small text-muted">
+                <strong>Fit source:</strong>
+                <span class="badge bg-secondary">TRAINING ONLY</span> |
+                <strong>Missing sebelum:</strong> {{
+                state.preprocessing_metadata.imputation.total_missing_before }}
+                | <strong>Missing setelah:</strong> {{
+                state.preprocessing_metadata.imputation.total_missing_after }}
+              </div>
             </div>
+            {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fas fa-hourglass-start fs-3 mb-2"></i>
+              <p class="m-0">{{ missing_status.message }}</p>
+            </div>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Informasi Alur Preprocessing -->
-    <div class="col-12 mb-4">
-        <div class="card border-0 shadow-sm bg-light-blue" style="border-left: 4px solid var(--primary-blue) !important; background-color: #f0f7ff;">
-            <div class="card-body py-3">
-                <h6 class="fw-bold text-primary mb-1"><i class="fas fa-info-circle me-2"></i>Status Dimensi Data Aktif</h6>
-                <p class="m-0 text-dark small">
-                    Dimensi Data Awal: <strong>{{ state.initial_shape[0] }} baris x {{ state.initial_shape[1] }} kolom</strong> | 
-                    Dimensi Data Saat Ini: <strong>{{ state.current_shape[0] }} baris x {{ state.current_shape[1] }} kolom</strong>
-                </p>
+    <!-- STEP 3: Duplicate -->
+    <div
+      class="card shadow-sm process-card mb-4 {% if step == 3 %}active{% elif step < 3 %}inactive{% endif %}"
+      id="step-3"
+    >
+      <div
+        class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold text-dark">
+          <span class="badge bg-primary me-2">3</span>Pemeriksaan & Penghapusan
+          Duplikat
+        </h5>
+        <span
+          class="badge {% if state.duplicates_handled %}bg-success{% else %}bg-secondary{% endif %} px-3"
+        >
+          {% if state.duplicates_handled %}Selesai{% else %}Menunggu Aksi{%
+          endif %}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div
+            class="col-md-5 border-end d-flex flex-column justify-content-center"
+          >
+            <p class="small text-muted mb-3">
+              Mendeteksi baris record berulang/identik secara berlebihan untuk
+              menghindari overfitting model.
+            </p>
+            {% if step == 3 %}
+            <form
+              action="{{ url_for('preprocessing.step3_duplicate') }}"
+              method="POST"
+              onsubmit="showLoading('Menghapus data duplikat...')"
+            >
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-trash-alt me-2"></i>Bersihkan Duplikat
+              </button>
+            </form>
+            {% else %}
+            <button class="btn btn-secondary btn-sm disabled">
+              <i class="fas fa-check me-2"></i>Telah Diterapkan
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-7">
+            {% if state.duplicates_handled %}
+            <div class="border rounded p-3 bg-light">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i class="fas fa-check-circle text-success me-1"></i>Hasil
+                Pembersihan Duplikat:
+              </h6>
+              <ul class="small text-muted mb-0">
+                <li>
+                  Jumlah baris terduplikasi terdeteksi:
+                  <strong>{{ state.duplicates_count }}</strong>
+                </li>
+                <li>
+                  Baris dihapus:
+                  <strong class="text-danger"
+                    >{{ state.duplicates_removed_count }}</strong
+                  >
+                </li>
+                <li>
+                  Baris tersisa: <strong>{{ state.current_shape[0] }}</strong>
+                </li>
+              </ul>
             </div>
+            {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fas fa-hourglass-start fs-3 mb-2"></i>
+              <p class="m-0">
+                Langkah ini akan membuang record duplikasi presisi dari memori
+                dataset aktif.
+              </p>
+            </div>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- CONTAINER LANGKAH-LANGKAH -->
-    <div class="col-12">
-        
-        <!-- STEP 1: Validasi & Konversi Tipe Data -->
-        <div class="card shadow-sm process-card mb-4 {% if step == 1 %}active{% else %}inactive{% endif %}" id="step-1">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">1</span>Validasi Dataset & Konversi Tipe Data</h5>
-                <span class="badge {% if state.has_fatal_conversion_errors %}bg-danger{% elif state.cleaning_applied %}bg-success{% else %}bg-secondary{% endif %} px-3">
-                    {% if state.has_fatal_conversion_errors %}Diblokir{% elif state.cleaning_applied %}Selesai{% else %}Menunggu Aksi{% endif %}
-                </span>
+    <!-- STEP 4: Outlier -->
+    <div
+      class="card shadow-sm process-card mb-4 {% if step == 4 %}active{% elif step < 4 %}inactive{% endif %}"
+      id="step-4"
+    >
+      <div
+        class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold text-dark">
+          <span class="badge bg-primary me-2">4</span>Deteksi & Penanganan
+          Outlier
+        </h5>
+        <span
+          class="badge {{ outlier_status.badge_class }} px-3"
+          data-status="{{ outlier_status.code }}"
+        >
+          {{ outlier_status.label }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-5 border-end">
+            <p class="small text-muted mb-3">{{ outlier_status.message }}</p>
+            {% if outlier_status.code in ['completed', 'completed_with_warning']
+            %}
+            <button class="btn btn-success btn-sm disabled">
+              <i class="fas fa-check me-2"></i>Telah Diterapkan
+            </button>
+            {% elif outlier_status.code == 'processing' %}
+            <button class="btn btn-primary btn-sm disabled">
+              <i class="fas fa-spinner fa-spin me-2"></i>Sedang Diproses
+            </button>
+            {% elif outlier_status.code == 'failed' %}
+            <button class="btn btn-danger btn-sm disabled">
+              <i class="fas fa-times me-2"></i>Gagal
+            </button>
+            {% else %}
+            <button class="btn btn-outline-info btn-sm disabled">
+              <i class="fas fa-cogs me-2"></i>Diterapkan Otomatis
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-7">
+            {% if outlier_status.code in ['completed', 'completed_with_warning']
+            %}
+            <div class="border rounded p-3 bg-light mb-3">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i class="fas fa-chart-line text-primary me-1"></i>Tabel Batas
+                Outlier IQR:
+              </h6>
+              <div
+                class="table-responsive mb-2"
+                style="max-height: 180px; overflow-y: auto"
+              >
+                <table
+                  class="table table-sm table-hover text-center table-bordered bg-white small m-0"
+                  style="font-size: 0.7rem"
+                >
+                  <thead class="table-light">
+                    <tr>
+                      <th>Variabel</th>
+                      <th>Lower Bound</th>
+                      <th>Upper Bound</th>
+                      <th>Clipped Train</th>
+                      <th>Clipped Test</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for col, info in state.outliers_stats.items() %}
+                    <tr>
+                      <td class="text-start fw-bold">{{ col }}</td>
+                      <td>{{ info.lower_bound }}</td>
+                      <td>{{ info.upper_bound }}</td>
+                      <td>
+                        <span class="badge bg-warning text-dark"
+                          >{{ info.train_clipped_count }}</span
+                        >
+                      </td>
+                      <td>
+                        <span class="badge bg-warning text-dark"
+                          >{{ info.test_clipped_count }}</span
+                        >
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="small text-muted border-top pt-2 mt-2">
+                <strong>Fit source:</strong>
+                <span class="badge bg-secondary">TRAINING ONLY</span> |
+                <strong>Clipped train:</strong> {{
+                state.preprocessing_metadata.outlier_handling.total_train_clipped
+                }} | <strong>Clipped test:</strong> {{
+                state.preprocessing_metadata.outlier_handling.total_test_clipped
+                }}
+              </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5 border-end">
-                        <h6 class="fw-bold text-dark small mb-2"><i class="fas fa-sync text-primary me-1"></i>Konversi & Validasi Otomatis:</h6>
-                        <ul class="small text-muted ps-3 mb-4">
-                            <li>Date → datetime</li>
-                            <li>Time → string time</li>
-                            <li>TSS, pH, Debit, dan CL-80 → numerik</li>
-                            <li>Observasi telah diseleksi saat upload untuk kondisi tanpa bahan kimia penunjang</li>
-                            <li>Eksklusi dosis CL-80 <= 0/null dan Inlet TSS > 2000 ppm</li>
-                        </ul>
-                        {% if step == 1 %}
-                        <form action="{{ url_for('preprocessing.step1_clean') }}" method="POST" onsubmit="showLoading('Menjalankan validasi dan konversi tipe data...');">
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-play me-2"></i>Jalankan Konversi</button>
-                        </form>
-                        {% else %}
-                        <button class="btn btn-secondary btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-7">
-                        {% if state.cleaning_applied or state.has_fatal_conversion_errors %}
-                        <div class="border rounded p-3 bg-light">
-                            <h6 class="fw-bold mb-2 text-dark small">
-                                <i class="fas {% if state.has_fatal_conversion_errors %}fa-times-circle text-danger{% else %}fa-check-circle text-success{% endif %} me-1"></i>Hasil Langkah 1:
-                            </h6>
-                            <ul class="small text-muted mb-0">
-                                <li>Baris data awal: <strong>{{ state.initial_shape[0] }}</strong></li>
-                                <li>Baris data tersisa: <strong>{{ state.current_shape[0] }}</strong></li>
-                                <li>Baris yang dibuang (dosis 0/null, TSS > 2000): <strong class="text-danger">{{ state.cleaning_removed_count }}</strong></li>
-                                {% if state.type_conversion_errors %}
-                                <li class="text-warning">Peringatan konversi tertangani: <code>{{ state.type_conversion_errors }}</code></li>
-                                {% else %}
-                                <li>Status Konversi: <span class="badge bg-success">Sukses (Tipe Float Aman)</span></li>
-                                {% endif %}
-                                {% if state.has_fatal_conversion_errors %}
-                                <li class="text-danger fw-bold">Pipeline dihentikan: {{ state.conversion_report.fatal_errors | join('; ') }}</li>
-                                {% endif %}
-                                <li>Catatan: <code>{{ state.cleaning_message }}</code></li>
-                            </ul>
-                            {% if state.conversion_report.details %}
-                            <div class="table-responsive mt-3">
-                                <table class="table table-sm table-bordered align-middle mb-2">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Kolom</th>
-                                            <th>Baris / Timestamp</th>
-                                            <th>Nilai Asli</th>
-                                            <th>Akar Masalah</th>
-                                            <th>Tindakan</th>
-                                            <th>Status Akhir</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for item in state.conversion_report.details %}
-                                        <tr>
-                                            <td>{{ item.column }}</td>
-                                            <td>{{ item.row_index }}{% if item.timestamp %}<br><span class="text-muted">{{ item.timestamp }}</span>{% endif %}</td>
-                                            <td><code>{{ item.original_value if item.original_value is not none else '(kosong)' }}</code></td>
-                                            <td>{{ item.root_cause }}</td>
-                                            <td>{{ item.action }}</td>
-                                            <td>
-                                                <span class="badge {% if item.final_status == 'berhasil_dinormalisasi' %}bg-info{% elif item.final_status == 'dikeluarkan_invalid' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-                                                    {{ item.final_status | replace('_', ' ') }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="{{ url_for('preprocessing.download', file_type='conversion_csv') }}" class="btn btn-xs btn-outline-primary">
-                                    <i class="fas fa-file-csv me-1"></i>Unduh Laporan Konversi CSV
-                                </a>
-                                <a href="{{ url_for('preprocessing.download', file_type='conversion_json') }}" class="btn btn-xs btn-outline-secondary">
-                                    <i class="fas fa-file-code me-1"></i>Unduh Laporan Konversi JSON
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted small">
-                            <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">Langkah ini akan melakukan validasi kolom wajib, penyesuaian tipe float numerik, dan pembersihan awal data.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- STEP 2: Missing Value -->
-        <div class="card shadow-sm process-card mb-4 {% if step == 2 %}active{% elif step < 2 %}inactive{% endif %}" id="step-2">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">2</span>Penanganan Nilai Kosong (Missing Value)</h5>
-                <span class="badge {{ missing_status.badge_class }} px-3" data-status="{{ missing_status.code }}">
-                    {{ missing_status.label }}
-                </span>
+            <div class="border rounded p-3 bg-white">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i class="fas fa-chart-bar me-1"></i>Sebaran Outlier Sebelum vs
+                Setelah Preprocessing:
+              </h6>
+              <div id="outliers-box-chart" style="min-height: 320px"></div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5 border-end">
-                        <p class="small text-muted mb-3">{{ missing_status.message }}</p>
-                        {% if missing_status.code in ['completed', 'completed_with_warning'] %}
-                        <button class="btn btn-success btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
-                        {% elif missing_status.code == 'processing' %}
-                        <button class="btn btn-primary btn-sm disabled"><i class="fas fa-spinner fa-spin me-2"></i>Sedang Diproses</button>
-                        {% elif missing_status.code == 'failed' %}
-                        <button class="btn btn-danger btn-sm disabled"><i class="fas fa-times me-2"></i>Gagal</button>
-                        {% else %}
-                        <button class="btn btn-outline-info btn-sm disabled"><i class="fas fa-cogs me-2"></i>Diterapkan Otomatis</button>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-7">
-                        {% if missing_status.code in ['completed', 'completed_with_warning'] %}
-                        <div class="border rounded p-3 bg-light">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-list text-primary me-1"></i>Bukti Imputasi Training-Only:</h6>
-                            {% if state.preprocessing_metadata.imputation.total_missing_before == 0 %}
-                            <div class="alert alert-success py-2 small mb-2">
-                                Pemeriksaan selesai, tidak ditemukan nilai kosong yang perlu diimputasi.
-                            </div>
-                            {% else %}
-                            <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                                <table class="table table-sm table-hover text-center table-bordered bg-white small m-0" style="font-size: 0.75rem;">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Fitur</th>
-                                            <th>Missing Train</th>
-                                            <th>Missing Test</th>
-                                            <th>Median Training</th>
-                                            <th>Missing Setelah</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for col, info in state.missing_stats.items() %}
-                                        {% if info.total_missing_before > 0 %}
-                                        <tr>
-                                            <td class="text-start fw-bold">{{ col }}</td>
-                                            <td>{{ info.train_missing_before }}</td>
-                                            <td>{{ info.test_missing_before }}</td>
-                                            <td>{{ '%.6g'|format(info.training_median) }}</td>
-                                            <td>{{ info.total_missing_after }}</td>
-                                        </tr>
-                                        {% endif %}
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% endif %}
-                            <div class="mt-2 pt-2 border-top small text-muted">
-                                <strong>Fit source:</strong> <span class="badge bg-secondary">TRAINING ONLY</span> |
-                                <strong>Missing sebelum:</strong> {{ state.preprocessing_metadata.imputation.total_missing_before }} |
-                                <strong>Missing setelah:</strong> {{ state.preprocessing_metadata.imputation.total_missing_after }}
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted small">
-                            <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">{{ missing_status.message }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
+            {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fas fa-hourglass-start fs-3 mb-2"></i>
+              <p class="m-0">{{ outlier_status.message }}</p>
             </div>
+            {% endif %}
+          </div>
         </div>
-
-        <!-- STEP 3: Duplicate -->
-        <div class="card shadow-sm process-card mb-4 {% if step == 3 %}active{% elif step < 3 %}inactive{% endif %}" id="step-3">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">3</span>Pemeriksaan & Penghapusan Duplikat</h5>
-                <span class="badge {% if state.duplicates_handled %}bg-success{% else %}bg-secondary{% endif %} px-3">
-                    {% if state.duplicates_handled %}Selesai{% else %}Menunggu Aksi{% endif %}
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5 border-end d-flex flex-column justify-content-center">
-                        <p class="small text-muted mb-3">Mendeteksi baris record berulang/identik secara berlebihan untuk menghindari overfitting model.</p>
-                        {% if step == 3 %}
-                        <form action="{{ url_for('preprocessing.step3_duplicate') }}" method="POST" onsubmit="showLoading('Menghapus data duplikat...');">
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-trash-alt me-2"></i>Bersihkan Duplikat</button>
-                        </form>
-                        {% else %}
-                        <button class="btn btn-secondary btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-7">
-                        {% if state.duplicates_handled %}
-                        <div class="border rounded p-3 bg-light">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-check-circle text-success me-1"></i>Hasil Pembersihan Duplikat:</h6>
-                            <ul class="small text-muted mb-0">
-                                <li>Jumlah baris terduplikasi terdeteksi: <strong>{{ state.duplicates_count }}</strong></li>
-                                <li>Baris dihapus: <strong class="text-danger">{{ state.duplicates_removed_count }}</strong></li>
-                                <li>Baris tersisa: <strong>{{ state.current_shape[0] }}</strong></li>
-                            </ul>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted small">
-                            <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">Langkah ini akan membuang record duplikasi presisi dari memori dataset aktif.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STEP 4: Outlier -->
-        <div class="card shadow-sm process-card mb-4 {% if step == 4 %}active{% elif step < 4 %}inactive{% endif %}" id="step-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">4</span>Deteksi & Penanganan Outlier</h5>
-                <span class="badge {{ outlier_status.badge_class }} px-3" data-status="{{ outlier_status.code }}">
-                    {{ outlier_status.label }}
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5 border-end">
-                        <p class="small text-muted mb-3">{{ outlier_status.message }}</p>
-                        {% if outlier_status.code in ['completed', 'completed_with_warning'] %}
-                        <button class="btn btn-success btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
-                        {% elif outlier_status.code == 'processing' %}
-                        <button class="btn btn-primary btn-sm disabled"><i class="fas fa-spinner fa-spin me-2"></i>Sedang Diproses</button>
-                        {% elif outlier_status.code == 'failed' %}
-                        <button class="btn btn-danger btn-sm disabled"><i class="fas fa-times me-2"></i>Gagal</button>
-                        {% else %}
-                        <button class="btn btn-outline-info btn-sm disabled"><i class="fas fa-cogs me-2"></i>Diterapkan Otomatis</button>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-7">
-                        {% if outlier_status.code in ['completed', 'completed_with_warning'] %}
-                        <div class="border rounded p-3 bg-light mb-3">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-chart-line text-primary me-1"></i>Tabel Batas Outlier IQR:</h6>
-                            <div class="table-responsive mb-2" style="max-height: 180px; overflow-y: auto;">
-                                <table class="table table-sm table-hover text-center table-bordered bg-white small m-0" style="font-size: 0.7rem;">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Variabel</th>
-                                            <th>Lower Bound</th>
-                                            <th>Upper Bound</th>
-                                            <th>Clipped Train</th>
-                                            <th>Clipped Test</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for col, info in state.outliers_stats.items() %}
-                                        <tr>
-                                            <td class="text-start fw-bold">{{ col }}</td>
-                                            <td>{{ info.lower_bound }}</td>
-                                            <td>{{ info.upper_bound }}</td>
-                                            <td><span class="badge bg-warning text-dark">{{ info.train_clipped_count }}</span></td>
-                                            <td><span class="badge bg-warning text-dark">{{ info.test_clipped_count }}</span></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="small text-muted border-top pt-2 mt-2">
-                                <strong>Fit source:</strong> <span class="badge bg-secondary">TRAINING ONLY</span> |
-                                <strong>Clipped train:</strong> {{ state.preprocessing_metadata.outlier_handling.total_train_clipped }} |
-                                <strong>Clipped test:</strong> {{ state.preprocessing_metadata.outlier_handling.total_test_clipped }}
-                            </div>
-                        </div>
-                        
-                        <div class="border rounded p-3 bg-white">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-chart-bar me-1"></i>Sebaran Outlier Sebelum vs Setelah Preprocessing:</h6>
-                            <div id="outliers-box-chart" style="min-height: 320px;"></div>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted small">
-                            <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">{{ outlier_status.message }}</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STEP 5: Feature Engineering -->
-        <div class="card shadow-sm process-card mb-4 {% if step == 5 %}active{% elif step < 5 %}inactive{% endif %}" id="step-5">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">5</span>Rekayasa Fitur (Feature Engineering)</h5>
-                <span class="badge {% if state.feature_engineering_applied %}bg-success{% else %}bg-secondary{% endif %} px-3">
-                    {% if state.feature_engineering_applied %}Selesai{% else %}Menunggu Aksi{% endif %}
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5 border-end">
-                        <h6 class="fw-bold text-dark small mb-2"><i class="fas fa-magic text-primary me-1"></i>Pembentukan 7 Fitur Baru:</h6>
-                        <ul class="small text-muted ps-3 mb-4">
-                            <li><strong>Kolom T1</strong>: dosis CL-80 satu observasi sebelumnya</li>
-                            <li><strong>Kolom T2</strong>: dosis CL-80 dua observasi sebelumnya</li>
-                            <li><strong>Kolom T3</strong>: dosis CL-80 tiga observasi sebelumnya</li>
-                            <li><strong>Efisiensi_TSS</strong>: ((Inlet TSS - Outlet TSS) / Inlet TSS) * 100</li>
-                            <li><strong>Delta_pH</strong>: Outlet pH - Inlet pH</li>
-                            <li><strong>Beban_TSS</strong>: Inlet TSS * Inlet Disch</li>
-                            <li class="text-warning">Eksklusi 3 baris pertama karena lagging NaN.</li>
-                        </ul>
-                        {% if step == 5 %}
-                        <form action="{{ url_for('preprocessing.step5_feature_eng') }}" method="POST" onsubmit="showLoading('Membangun fitur lagging memory...');">
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-magic me-2"></i>Jalankan Rekayasa Fitur</button>
-                        </form>
-                        {% else %}
-                        <button class="btn btn-secondary btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-7">
-                        {% if state.feature_engineering_applied %}
-                        <div class="border rounded p-3 bg-light">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-check-circle text-success me-1"></i>Validasi Fitur Terbentuk:</h6>
-                            <div class="row text-muted small g-2 mb-3">
-                                {% for name, ok in state.feature_engineering_validation.items() %}
-                                <div class="col-6">
-                                    <i class="fas {% if ok %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"></i>{{ name }}
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <ul class="small text-muted mb-0">
-                                <li>Baris dieliminasi pada baris awal: <strong class="text-danger">{{ state.lag_rows_deleted }} baris</strong></li>
-                                <li>Dimensi Baru: <strong>{{ state.current_shape[0] }} baris x {{ state.current_shape[1] }} kolom</strong></li>
-                                <li>Catatan: <code>{{ state.feature_engineering_message }}</code></li>
-                            </ul>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted small">
-                            <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">Langkah ini wajib untuk melahirkan 7 variabel baru bagi ketepatan estimasi model.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- STEP 6: Dataset Siap Training & Export -->
-        <div class="card shadow-sm process-card mb-4 {% if step == 6 %}active{% elif step < 6 %}inactive{% endif %}" id="step-6">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold text-dark"><span class="badge bg-primary me-2">6</span>Standardisasi, Split, Simpan & Ekspor</h5>
-                <span class="badge {% if state.scaler_applied %}bg-success{% else %}bg-secondary{% endif %} px-3">
-                    {% if state.scaler_applied %}Siap Dilatih{% else %}Menunggu Aksi{% endif %}
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5 border-end">
-                        <p class="small text-muted mb-3">Menyelesaikan standardisasi fitur dan melakukan chronological split (80:20 tanpa pengacakan), mengekspor dataset siap pakai ke folder <code>output/preprocessing/</code>.</p>
-                        {% if step == 6 %}
-                        <form action="{{ url_for('preprocessing.step6_scale_split') }}" method="POST" onsubmit="showLoading('Menstandardisasi fitur dan membagi dataset...');">
-                            <div class="mb-3">
-                                <label for="scaler_type" class="form-label fw-semibold text-dark small">Penskalaan Wajib</label>
-                                <select name="scaler_type" id="scaler_type" class="form-select form-select-sm">
-                                    <option value="standard" selected>StandardScaler (Rata-rata=0, StdDev=1)</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="split_size" class="form-label fw-semibold text-dark small">Ukuran Data Uji (Test Split %)</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" name="split_size" id="split_size" class="form-control" value="20" readonly>
-                                    <span class="input-group-text">%</span>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-2"></i>Simpan & Siapkan Dataset</button>
-                        </form>
-                        {% else %}
-                        <button class="btn btn-secondary btn-sm disabled"><i class="fas fa-check me-2"></i>Telah Diterapkan</button>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-7">
-                        {% if state.scaler_applied and state.split %}
-                        <div class="border rounded p-3 bg-light mb-3">
-                            <h6 class="fw-bold mb-2 text-dark small"><i class="fas fa-check-circle text-success me-1"></i>Status Dataset Akhir:</h6>
-                            <ul class="small text-muted mb-0">
-                                <li>Penskalaan Fitur: <code>{{ state.scaler_strategy | upper }}</code></li>
-                                <li>Pembagian Data: <strong>Chronological Split (80:20 tanpa pengacakan)</strong></li>
-                                <li>Dimensi Data Latih (X_train): <strong>{{ state.train_shape[0] }} baris x {{ state.train_shape[1] }} fitur</strong></li>
-                                <li>Dimensi Data Uji (X_test): <strong>{{ state.test_shape[0] }} baris x {{ state.test_shape[1] }} fitur</strong></li>
-                            </ul>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a href="{{ url_for('preprocessing.download', file_type='csv') }}" class="btn btn-sm btn-outline-primary w-50 fw-bold">
-                                <i class="fas fa-file-csv me-2"></i>Ekspor CSV
-                            </a>
-                            <a href="{{ url_for('preprocessing.download', file_type='xlsx') }}" class="btn btn-sm btn-outline-success w-50 fw-bold">
-                                <i class="fas fa-file-excel me-2"></i>Ekspor Excel
-                            </a>
-                        </div>
-                        <div class="mt-3">
-                            <a href="{{ url_for('training.index') }}" class="btn btn-success btn-sm w-100 fw-bold shadow-sm">
-                                <i class="fas fa-arrow-right me-2"></i>Lanjut Ke Pelatihan Model
-                            </a>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4 text-muted small">
-                            <i class="fas fa-hourglass-start fs-3 mb-2"></i>
-                            <p class="m-0">Langkah ini akan menyelesaikan pemotongan split data dan ekspor file.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
+      </div>
     </div>
 
-    <!-- PERBANDINGAN SEBELUM VS SESUDAH -->
-    {% if state.scaler_applied and state.split %}
-    <div class="col-12 mb-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3">
-                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-balance-scale text-primary me-2"></i>Tabel Perbandingan Sebelum vs Sesudah</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-custom text-center m-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Metrik / Parameter</th>
-                                <th>Sebelum Preprocessing</th>
-                                <th>Setelah Preprocessing</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="fw-semibold text-start ps-4">Jumlah Data (Baris)</td>
-                                <td>{{ state.comparison.before_rows }}</td>
-                                <td class="text-success fw-bold">{{ state.comparison.after_rows }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold text-start ps-4">Jumlah Kolom</td>
-                                <td>{{ state.comparison.before_cols }}</td>
-                                <td class="text-primary fw-bold">{{ state.comparison.after_cols }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold text-start ps-4">Missing Value (Sel Kosong)</td>
-                                <td>{{ state.comparison.before_missing }}</td>
-                                <td class="text-success fw-bold">{{ state.comparison.after_missing }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold text-start ps-4">Data Duplikat (Baris)</td>
-                                <td>{{ state.comparison.before_duplicates }}</td>
-                                <td class="text-success fw-bold">{{ state.comparison.after_duplicates }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold text-start ps-4">Outlier IQR</td>
-                                <td>{{ state.comparison.before_outliers }}</td>
-                                <td>{{ state.comparison.after_outliers }}</td>
-                            </tr>
-                            <tr>
-                                <td class="fw-semibold text-start ps-4">Jumlah Fitur Independen</td>
-                                <td>{{ state.comparison.before_features }}</td>
-                                <td class="text-success fw-bold">{{ state.comparison.after_features }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <!-- STEP 5: Feature Engineering -->
+    <div
+      class="card shadow-sm process-card mb-4 {% if step == 5 %}active{% elif step < 5 %}inactive{% endif %}"
+      id="step-5"
+    >
+      <div
+        class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold text-dark">
+          <span class="badge bg-primary me-2">5</span>Rekayasa Fitur (Feature
+          Engineering)
+        </h5>
+        <span
+          class="badge {% if state.feature_engineering_applied %}bg-success{% else %}bg-secondary{% endif %} px-3"
+        >
+          {% if state.feature_engineering_applied %}Selesai{% else %}Menunggu
+          Aksi{% endif %}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-5 border-end">
+            <h6 class="fw-bold text-dark small mb-2">
+              <i class="fas fa-magic text-primary me-1"></i>Pembentukan 7 Fitur
+              Baru:
+            </h6>
+            <ul class="small text-muted ps-3 mb-4">
+              <li>
+                <strong>Kolom T1</strong>: dosis CL-80 satu observasi sebelumnya
+              </li>
+              <li>
+                <strong>Kolom T2</strong>: dosis CL-80 dua observasi sebelumnya
+              </li>
+              <li>
+                <strong>Kolom T3</strong>: dosis CL-80 tiga observasi sebelumnya
+              </li>
+              <li>
+                <strong>Efisiensi_TSS</strong>: ((Inlet TSS - Outlet TSS) /
+                Inlet TSS) * 100
+              </li>
+              <li><strong>Delta_pH</strong>: Outlet pH - Inlet pH</li>
+              <li><strong>Beban_TSS</strong>: Inlet TSS * Inlet Disch</li>
+              <li class="text-warning">
+                Eksklusi 3 baris pertama karena lagging NaN.
+              </li>
+            </ul>
+            {% if step == 5 %}
+            <form
+              action="{{ url_for('preprocessing.step5_feature_eng') }}"
+              method="POST"
+              onsubmit="showLoading('Membangun fitur lagging memory...')"
+            >
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-magic me-2"></i>Jalankan Rekayasa Fitur
+              </button>
+            </form>
+            {% else %}
+            <button class="btn btn-secondary btn-sm disabled">
+              <i class="fas fa-check me-2"></i>Telah Diterapkan
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-7">
+            {% if state.feature_engineering_applied %}
+            <div class="border rounded p-3 bg-light">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i class="fas fa-check-circle text-success me-1"></i>Validasi
+                Fitur Terbentuk:
+              </h6>
+              <div class="row text-muted small g-2 mb-3">
+                {% for name, ok in state.feature_engineering_validation.items()
+                %}
+                <div class="col-6">
+                  <i
+                    class="fas {% if ok %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %} me-2"
+                  ></i
+                  >{{ name }}
                 </div>
+                {% endfor %}
+              </div>
+              <ul class="small text-muted mb-0">
+                <li>
+                  Baris dieliminasi pada baris awal:
+                  <strong class="text-danger"
+                    >{{ state.lag_rows_deleted }} baris</strong
+                  >
+                </li>
+                <li>
+                  Dimensi Baru:
+                  <strong
+                    >{{ state.current_shape[0] }} baris x {{
+                    state.current_shape[1] }} kolom</strong
+                  >
+                </li>
+                <li>
+                  Catatan: <code>{{ state.feature_engineering_message }}</code>
+                </li>
+              </ul>
             </div>
+            {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fas fa-hourglass-start fs-3 mb-2"></i>
+              <p class="m-0">
+                Langkah ini wajib untuk melahirkan 7 variabel baru bagi
+                ketepatan estimasi model.
+              </p>
+            </div>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- PREVIEW DATASETS BEFORE VS AFTER -->
-    <div class="col-12 mb-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white py-3">
-                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-eye text-primary me-2"></i>Preview Sampel Dataset (Top 8 Baris)</h5>
-            </div>
-            <div class="card-body">
-                <ul class="nav nav-tabs mb-3" id="previewTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active fw-bold small" id="raw-tab" data-bs-toggle="tab" data-bs-target="#raw-preview" type="button" role="tab" aria-controls="raw-preview" aria-selected="true">Sebelum Preprocessing</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-bold small" id="active-tab" data-bs-toggle="tab" data-bs-target="#active-preview" type="button" role="tab" aria-controls="active-preview" aria-selected="false">Setelah Preprocessing</button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="previewTabContent">
-                    <div class="tab-pane fade show active" id="raw-preview" role="tabpanel" aria-labelledby="raw-tab">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm small text-center w-100" id="table-before">
-                                <thead>
-                                    <tr>
-                                        {% if preview_raw %}
-                                            {% for key in preview_raw[0].keys() %}
-                                                <th>{{ key }}</th>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if preview_raw %}
-                                        {% for row in preview_raw %}
-                                            <tr>
-                                                {% for val in row.values() %}
-                                                    <td>{{ val }}</td>
-                                                {% endfor %}
-                                            </tr>
-                                        {% endfor %}
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <div class="tab-pane fade" id="active-preview" role="tabpanel" aria-labelledby="active-tab">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm small text-center w-100" id="table-after">
-                                <thead>
-                                    <tr>
-                                        {% if preview_active %}
-                                            {% for key in preview_active[0].keys() %}
-                                                <th>{{ key }}</th>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% if preview_active %}
-                                        {% for row in preview_active %}
-                                            <tr>
-                                                {% for val in row.values() %}
-                                                    <td>{{ val }}</td>
-                                                {% endfor %}
-                                            </tr>
-                                        {% endfor %}
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+    <!-- STEP 6: Dataset Siap Training & Export -->
+    <div
+      class="card shadow-sm process-card mb-4 {% if step == 6 %}active{% elif step < 6 %}inactive{% endif %}"
+      id="step-6"
+    >
+      <div
+        class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+      >
+        <h5 class="m-0 fw-bold text-dark">
+          <span class="badge bg-primary me-2">6</span>Standardisasi, Split,
+          Simpan & Ekspor
+        </h5>
+        <span
+          class="badge {% if state.scaler_applied %}bg-success{% else %}bg-secondary{% endif %} px-3"
+        >
+          {% if state.scaler_applied %}Siap Dilatih{% else %}Menunggu Aksi{%
+          endif %}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-5 border-end">
+            <p class="small text-muted mb-3">
+              Menyelesaikan standardisasi fitur dan melakukan chronological
+              split tanpa pengacakan, mengekspor dataset siap pakai ke folder
+              <code>output/preprocessing/</code>.
+            </p>
+            {% if step == 6 %}
+            <form
+              action="{{ url_for('preprocessing.step6_scale_split') }}"
+              method="POST"
+              onsubmit="
+                showLoading('Menstandardisasi fitur dan membagi dataset...')
+              "
+            >
+              <div class="mb-3">
+                <label
+                  for="scaler_type"
+                  class="form-label fw-semibold text-dark small"
+                  >Penskalaan Wajib</label
+                >
+                <select
+                  name="scaler_type"
+                  id="scaler_type"
+                  class="form-select form-select-sm"
+                >
+                  <option value="standard" selected>
+                    StandardScaler (Rata-rata=0, StdDev=1)
+                  </option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label
+                  for="split_size"
+                  class="form-label fw-semibold text-dark small"
+                  >Ukuran Data Uji (Test Split %)</label
+                >
+                <div class="input-group input-group-sm">
+                  <input
+                    type="number"
+                    name="split_size"
+                    id="split_size"
+                    class="form-control"
+                    value="{{ state.split_ratio | default(20, true) }}"
+                    min="10"
+                    max="40"
+                    step="1"
+                    required
+                  />
+                  <span class="input-group-text">%</span>
                 </div>
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-save me-2"></i>Simpan & Siapkan Dataset
+              </button>
+            </form>
+            {% else %}
+            <button class="btn btn-secondary btn-sm disabled">
+              <i class="fas fa-check me-2"></i>Telah Diterapkan
+            </button>
+            {% endif %}
+          </div>
+          <div class="col-md-7">
+            {% if state.scaler_applied and state.split %}
+            <div class="border rounded p-3 bg-light mb-3">
+              <h6 class="fw-bold mb-2 text-dark small">
+                <i class="fas fa-check-circle text-success me-1"></i>Status
+                Dataset Akhir:
+              </h6>
+              <ul class="small text-muted mb-0">
+                <li>
+                  Penskalaan Fitur:
+                  <code>{{ state.scaler_strategy | upper }}</code>
+                </li>
+                <li>
+                  Pembagian Data:
+                  <strong
+                    >Chronological Split ({{ 100 - state.split_ratio }}:{{
+                    state.split_ratio }} tanpa pengacakan)</strong
+                  >
+                </li>
+                <li>
+                  Dimensi Data Latih (X_train):
+                  <strong
+                    >{{ state.train_shape[0] }} baris x {{ state.train_shape[1]
+                    }} fitur</strong
+                  >
+                </li>
+                <li>
+                  Dimensi Data Uji (X_test):
+                  <strong
+                    >{{ state.test_shape[0] }} baris x {{ state.test_shape[1] }}
+                    fitur</strong
+                  >
+                </li>
+              </ul>
             </div>
+            <div class="d-flex gap-2">
+              <a
+                href="{{ url_for('preprocessing.download', file_type='csv') }}"
+                class="btn btn-sm btn-outline-primary w-50 fw-bold"
+              >
+                <i class="fas fa-file-csv me-2"></i>Ekspor CSV
+              </a>
+              <a
+                href="{{ url_for('preprocessing.download', file_type='xlsx') }}"
+                class="btn btn-sm btn-outline-success w-50 fw-bold"
+              >
+                <i class="fas fa-file-excel me-2"></i>Ekspor Excel
+              </a>
+            </div>
+            <div class="mt-3">
+              <a
+                href="{{ url_for('training.index') }}"
+                class="btn btn-success btn-sm w-100 fw-bold shadow-sm"
+              >
+                <i class="fas fa-arrow-right me-2"></i>Lanjut Ke Pelatihan Model
+              </a>
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted small">
+              <i class="fas fa-hourglass-start fs-3 mb-2"></i>
+              <p class="m-0">
+                Langkah ini akan menyelesaikan pemotongan split data dan ekspor
+                file.
+              </p>
+            </div>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
-    {% endif %}
+  </div>
 
-    <!-- PANEL PENJELASAN PROSES -->
-    <div class="col-12 mb-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h5 class="fw-bold text-dark m-0"><i class="fas fa-graduation-cap text-primary me-2"></i>Penjelasan Proses Ilmiah Preprocessing</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-muted small g-3">
-                    <div class="col-md-6 border-end">
-                        <h6 class="fw-bold text-dark"><i class="fas fa-info-circle text-primary me-2"></i>Mengapa Preprocessing & Validasi Dilakukan?</h6>
-                        <p class="mb-3">
-                            Dataset historis harian dari settling pond IPAL tambang batubara sering mengandung noise operasional akibat keterbatasan pengukuran sensor fisik atau kesalahan pencatatan manual. Preprocessing memastikan model regresi dilatih pada data berkualitas tinggi yang bebas dari anomali.
-                        </p>
-
-                        <h6 class="fw-bold text-dark"><i class="fas fa-question-circle text-warning me-2"></i>Mengapa Missing Value & Outlier IQR Diperiksa?</h6>
-                        <p class="mb-3">
-                            Algoritma Regresi (Linear, XGBoost, LightGBM) sangat sensitif terhadap nilai kosong (NaN) dan pencilan (outlier). Imputasi nilai kosong dengan median melestarikan tren distribusi data tanpa memicu pergeseran rata-rata. Sementara itu, analisis outlier IQR membantu memisahkan kebisingan (noise) ekstrim dari variabilitas operasional aktual.
-                        </p>
-
-                        <h6 class="fw-bold text-dark"><i class="fas fa-clock text-info me-2"></i>Mengapa T1, T2, T3 (Lagging Memory) Wajib Dibuat?</h6>
-                        <p class="mb-0">
-                            T1, T2, dan T3 merepresentasikan tiga observasi CL-80 sebelumnya setelah data diurutkan berdasarkan timestamp. Intervalnya tidak disebut jam karena keseragaman interval sampling belum divalidasi.
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="fw-bold text-dark"><i class="fas fa-percentage text-success me-2"></i>Mengapa Efisiensi_TSS & delta_pH Dibentuk?</h6>
-                        <p class="mb-3">
-                            <strong>Efisiensi_TSS</strong> menggambarkan perubahan TSS relatif, sedangkan <strong>Delta_pH</strong> adalah selisih pH outlet dan inlet. Keduanya merupakan fitur prediktif, bukan klaim kausal.
-                        </p>
-
-                        <h6 class="fw-bold text-dark"><i class="fas fa-water text-primary me-2"></i>Mengapa Beban_TSS Dibuat?</h6>
-                        <p class="mb-0">
-                            <strong>Beban_TSS</strong> memadukan Inlet TSS dengan Inlet Discharge. Tidak ada fitur bahan kimia penunjang atau rasio kimia dalam 11 input model.
-                        </p>
-                    </div>
-                </div>
-            </div>
+  <!-- PERBANDINGAN SEBELUM VS SESUDAH -->
+  {% if state.scaler_applied and state.split %}
+  <div class="col-12 mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h5 class="m-0 fw-bold text-dark">
+          <i class="fas fa-balance-scale text-primary me-2"></i>Tabel
+          Perbandingan Sebelum vs Sesudah
+        </h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-custom text-center m-0">
+            <thead class="table-light">
+              <tr>
+                <th>Metrik / Parameter</th>
+                <th>Sebelum Preprocessing</th>
+                <th>Setelah Preprocessing</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="fw-semibold text-start ps-4">Jumlah Data (Baris)</td>
+                <td>{{ state.comparison.before_rows }}</td>
+                <td class="text-success fw-bold">
+                  {{ state.comparison.after_rows }}
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-semibold text-start ps-4">Jumlah Kolom</td>
+                <td>{{ state.comparison.before_cols }}</td>
+                <td class="text-primary fw-bold">
+                  {{ state.comparison.after_cols }}
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-semibold text-start ps-4">
+                  Missing Value (Sel Kosong)
+                </td>
+                <td>{{ state.comparison.before_missing }}</td>
+                <td class="text-success fw-bold">
+                  {{ state.comparison.after_missing }}
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-semibold text-start ps-4">
+                  Data Duplikat (Baris)
+                </td>
+                <td>{{ state.comparison.before_duplicates }}</td>
+                <td class="text-success fw-bold">
+                  {{ state.comparison.after_duplicates }}
+                </td>
+              </tr>
+              <tr>
+                <td class="fw-semibold text-start ps-4">Outlier IQR</td>
+                <td>{{ state.comparison.before_outliers }}</td>
+                <td>{{ state.comparison.after_outliers }}</td>
+              </tr>
+              <tr>
+                <td class="fw-semibold text-start ps-4">
+                  Jumlah Fitur Independen
+                </td>
+                <td>{{ state.comparison.before_features }}</td>
+                <td class="text-success fw-bold">
+                  {{ state.comparison.after_features }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
     </div>
+  </div>
 
+  <!-- PREVIEW DATASETS BEFORE VS AFTER -->
+  <div class="col-12 mb-4">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h5 class="m-0 fw-bold text-dark">
+          <i class="fas fa-eye text-primary me-2"></i>Preview Sampel Dataset
+          (Top 10 Baris)
+        </h5>
+      </div>
+      <div class="card-body">
+        <ul class="nav nav-tabs mb-3" id="previewTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link active fw-bold small"
+              id="raw-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#raw-preview"
+              type="button"
+              role="tab"
+              aria-controls="raw-preview"
+              aria-selected="true"
+            >
+              Sebelum Preprocessing
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link fw-bold small"
+              id="active-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#active-preview"
+              type="button"
+              role="tab"
+              aria-controls="active-preview"
+              aria-selected="false"
+            >
+              Setelah Preprocessing
+            </button>
+          </li>
+        </ul>
+        <div class="tab-content" id="previewTabContent">
+          <div
+            class="tab-pane fade show active"
+            id="raw-preview"
+            role="tabpanel"
+            aria-labelledby="raw-tab"
+          >
+            <div class="table-responsive">
+              <table
+                class="table table-bordered table-sm small text-center w-100"
+                id="table-before"
+              >
+                <thead>
+                  <tr>
+                    {% if preview_raw %} {% for key in preview_raw[0].keys() %}
+                    <th>{{ key }}</th>
+                    {% endfor %} {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if preview_raw %} {% for row in preview_raw %}
+                  <tr>
+                    {% for val in row.values() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %} {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div
+            class="tab-pane fade"
+            id="active-preview"
+            role="tabpanel"
+            aria-labelledby="active-tab"
+          >
+            <div class="table-responsive">
+              <table
+                class="table table-bordered table-sm small text-center w-100"
+                id="table-after"
+              >
+                <thead>
+                  <tr>
+                    {% if preview_active %} {% for key in
+                    preview_active[0].keys() %}
+                    <th>{{ key }}</th>
+                    {% endfor %} {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if preview_active %} {% for row in preview_active %}
+                  <tr>
+                    {% for val in row.values() %}
+                    <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                  {% endfor %} {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- PANEL PENJELASAN PROSES -->
+  <div class="col-12 mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="fw-bold text-dark m-0">
+          <i class="fas fa-graduation-cap text-primary me-2"></i>Penjelasan
+          Proses Ilmiah Preprocessing
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row text-muted small g-3">
+          <div class="col-md-6 border-end">
+            <h6 class="fw-bold text-dark">
+              <i class="fas fa-info-circle text-primary me-2"></i>Mengapa
+              Preprocessing & Validasi Dilakukan?
+            </h6>
+            <p class="mb-3">
+              Dataset historis harian dari settling pond IPAL tambang batubara
+              sering mengandung noise operasional akibat keterbatasan pengukuran
+              sensor fisik atau kesalahan pencatatan manual. Preprocessing
+              memastikan model regresi dilatih pada data berkualitas tinggi yang
+              bebas dari anomali.
+            </p>
+
+            <h6 class="fw-bold text-dark">
+              <i class="fas fa-question-circle text-warning me-2"></i>Mengapa
+              Missing Value & Outlier IQR Diperiksa?
+            </h6>
+            <p class="mb-3">
+              Algoritma Regresi (Linear, XGBoost, LightGBM) sangat sensitif
+              terhadap nilai kosong (NaN) dan pencilan (outlier). Imputasi nilai
+              kosong dengan median melestarikan tren distribusi data tanpa
+              memicu pergeseran rata-rata. Sementara itu, analisis outlier IQR
+              membantu memisahkan kebisingan (noise) ekstrim dari variabilitas
+              operasional aktual.
+            </p>
+
+            <h6 class="fw-bold text-dark">
+              <i class="fas fa-clock text-info me-2"></i>Mengapa T1, T2, T3
+              (Lagging Memory) Wajib Dibuat?
+            </h6>
+            <p class="mb-0">
+              T1, T2, dan T3 merepresentasikan tiga observasi CL-80 sebelumnya
+              setelah data diurutkan berdasarkan timestamp. Intervalnya tidak
+              disebut jam karena keseragaman interval sampling belum divalidasi.
+            </p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-dark">
+              <i class="fas fa-percentage text-success me-2"></i>Mengapa
+              Efisiensi_TSS & delta_pH Dibentuk?
+            </h6>
+            <p class="mb-3">
+              <strong>Efisiensi_TSS</strong> menggambarkan perubahan TSS
+              relatif, sedangkan <strong>Delta_pH</strong> adalah selisih pH
+              outlet dan inlet. Keduanya merupakan fitur prediktif, bukan klaim
+              kausal.
+            </p>
+
+            <h6 class="fw-bold text-dark">
+              <i class="fas fa-water text-primary me-2"></i>Mengapa Beban_TSS
+              Dibuat?
+            </h6>
+            <p class="mb-0">
+              <strong>Beban_TSS</strong> memadukan Inlet TSS dengan Inlet
+              Discharge. Tidak ada fitur bahan kimia penunjang atau rasio kimia
+              dalam 11 input model.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
+{% endblock %} {% block extra_js %}
 <!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
 <script>
-    $(document).ready(function() {
-        if ($('#table-before').length) {
-            $('#table-before').DataTable({
-                "paging": true,
-                "lengthChange": false,
-                "searching": false,
-                "ordering": false,
-                "info": true,
-                "pageLength": 5,
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
-                }
-            });
-        }
-        if ($('#table-after').length) {
-            $('#table-after').DataTable({
-                "paging": true,
-                "lengthChange": false,
-                "searching": false,
-                "ordering": false,
-                "info": true,
-                "pageLength": 5,
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.13.5/i18n/id.json"
-                }
-            });
-        }
-    });
+  $(document).ready(function () {
+    if ($("#table-before").length) {
+      $("#table-before").DataTable({
+        paging: true,
+        lengthChange: false,
+        searching: false,
+        ordering: false,
+        info: true,
+        pageLength: 5,
+        language: {
+          url: "https://cdn.datatables.net/plug-ins/1.13.5/i18n/id.json",
+        },
+      });
+    }
+    if ($("#table-after").length) {
+      $("#table-after").DataTable({
+        paging: true,
+        lengthChange: false,
+        searching: false,
+        ordering: false,
+        info: true,
+        pageLength: 5,
+        language: {
+          url: "https://cdn.datatables.net/plug-ins/1.13.5/i18n/id.json",
+        },
+      });
+    }
+  });
 </script>
 
 {% if state.outliers_detected %}
 <!-- Plotly CDN -->
 <script src="https://cdn.plot.ly/plotly-3.7.0.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Fetch boxplot data
-        fetch("{{ url_for('preprocessing.outliers_chart') }}")
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error("Gagal memuat chart outlier:", data.error);
-                    document.getElementById("outliers-box-chart").innerHTML = `<p class="text-danger small">${data.error}</p>`;
-                } else {
-                    Plotly.newPlot("outliers-box-chart", data.data, data.layout, {responsive: true});
-                }
-            })
-            .catch(err => {
-                console.error("Error fetching outlier chart:", err);
-            });
-    });
+  document.addEventListener("DOMContentLoaded", function () {
+    // Fetch boxplot data
+    fetch("{{ url_for('preprocessing.outliers_chart') }}")
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          console.error("Gagal memuat chart outlier:", data.error);
+          document.getElementById("outliers-box-chart").innerHTML =
+            `<p class="text-danger small">${data.error}</p>`;
+        } else {
+          Plotly.newPlot("outliers-box-chart", data.data, data.layout, {
+            responsive: true,
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching outlier chart:", err);
+      });
+  });
 </script>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

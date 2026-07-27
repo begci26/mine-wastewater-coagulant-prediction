@@ -251,7 +251,7 @@ class LeakageSafePreprocessor(BaseEstimator, TransformerMixin):
 
         return {
             "split_completed": True,
-            "split_method": "chronological_80_20",
+            "split_method": "chronological_without_shuffle",
             "imputation": {
                 "status": "completed",
                 "method": "median",
@@ -429,10 +429,13 @@ class WastewaterPreprocessor:
         return clean, summary
 
     @staticmethod
-    def chronological_split(engineered, train_fraction=0.8):
+    def chronological_split(engineered, test_fraction=0.2):
         if len(engineered) < 12:
             raise ValueError("Dataset terlalu kecil untuk split kronologis dan TimeSeriesSplit 5 bagian.")
+        if not 0 < test_fraction < 1:
+            raise ValueError("Proporsi data uji harus berada di antara 0 dan 1.")
         data = engineered.sort_values("Timestamp", kind="mergesort").reset_index(drop=True)
+        train_fraction = 1 - test_fraction
         nominal = int(len(data) * train_fraction)
         candidates = [
             index
@@ -448,8 +451,11 @@ class WastewaterPreprocessor:
             raise ValueError("Validasi kronologis gagal: periode training harus mendahului testing.")
         return train, test
 
-    def prepare_and_save(self, engineered):
-        train, test = self.chronological_split(engineered)
+    def prepare_and_save(self, engineered, test_fraction=0.2):
+        train, test = self.chronological_split(
+            engineered,
+            test_fraction=test_fraction,
+        )
         X_train_raw = train.loc[:, MODEL_FEATURES].copy()
         X_test_raw = test.loc[:, MODEL_FEATURES].copy()
         y_train = train[REQUIRED_TARGET].copy()
@@ -492,7 +498,9 @@ class WastewaterPreprocessor:
                 test["Timestamp"].max().isoformat(),
             ],
             "split_ratio": f"{len(train) / len(engineered):.4f}:{len(test) / len(engineered):.4f}",
-            "split_method": "chronological_80_20",
+            "requested_test_fraction": float(test_fraction),
+            "requested_test_percentage": int(round(test_fraction * 100)),
+            "split_method": "chronological_without_shuffle",
             "final_feature_names": MODEL_FEATURES.copy(),
             "feature_count": len(MODEL_FEATURES),
             "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,

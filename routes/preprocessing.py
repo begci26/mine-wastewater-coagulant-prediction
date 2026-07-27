@@ -19,6 +19,8 @@ from utils.helpers import (
 from utils.logger import app_logger
 
 preprocessing_bp = Blueprint("preprocessing", __name__)
+MIN_TEST_SPLIT_PERCENT = 10
+MAX_TEST_SPLIT_PERCENT = 40
 
 STATUS_PRESENTATION = {
     "not_started": {
@@ -69,6 +71,22 @@ def get_preprocessing_paths():
         os.path.join(processed_dir, "df_active.csv"),
         os.path.join(processed_dir, "preprocessing_state.json"),
     )
+
+
+def parse_test_split_percent(raw_value):
+    """Validate the user-selected integer percentage for the test period."""
+    if raw_value is None or not str(raw_value).strip():
+        raise ValueError("Ukuran data uji wajib diisi.")
+    try:
+        percentage = int(str(raw_value).strip())
+    except ValueError as error:
+        raise ValueError("Ukuran data uji harus berupa bilangan bulat.") from error
+    if not MIN_TEST_SPLIT_PERCENT <= percentage <= MAX_TEST_SPLIT_PERCENT:
+        raise ValueError(
+            f"Ukuran data uji harus antara {MIN_TEST_SPLIT_PERCENT}% dan "
+            f"{MAX_TEST_SPLIT_PERCENT}%."
+        )
+    return percentage
 
 
 def _initial_state():
@@ -164,7 +182,8 @@ def _has_completed_evidence(metadata):
     scaling = metadata.get("scaling", {})
     return bool(
         metadata.get("split_completed")
-        and metadata.get("split_method") == "chronological_80_20"
+        and metadata.get("split_method")
+        in {"chronological_80_20", "chronological_without_shuffle"}
         and imputation.get("status") == "completed"
         and imputation.get("fit_source") == "training_only"
         and isinstance(imputation.get("columns"), dict)
@@ -189,7 +208,8 @@ def _migrate_legacy_status(state):
     ]
     if not (
         state.get("split")
-        and metadata.get("split_method") == "chronological_80_20"
+        and metadata.get("split_method")
+        in {"chronological_80_20", "chronological_without_shuffle"}
         and legacy_preprocessing.get("fit_scope") == "training_period_only"
         and all(os.path.exists(path) for path in required_files)
     ):
@@ -422,8 +442,8 @@ def index():
         state=state,
         missing_status=_status_view(state, "imputation"),
         outlier_status=_status_view(state, "outlier_handling"),
-        preview_raw=raw.head(8).to_dict(orient="records"),
-        preview_active=active.head(8).to_dict(orient="records"),
+        preview_raw=raw.head(10).to_dict(orient="records"),
+        preview_active=active.head(10).to_dict(orient="records"),
     )
 
 
@@ -572,6 +592,14 @@ def step5_feature_eng():
 @preprocessing_bp.route("/step6_scale_split", methods=["POST"])
 def step6_scale_split():
     state = get_or_init_state()
+    try:
+        split_percentage = parse_test_split_percent(request.form.get("split_size"))
+    except ValueError as error:
+        flash(str(error), "danger")
+        return redirect(url_for("preprocessing.index") + "#step-6")
+
+    # Preserve valid input if a later preprocessing validation fails.
+    state["split_ratio"] = split_percentage
     state.pop("preprocessing_metadata", None)
     state.update(
         {
@@ -595,7 +623,10 @@ def step6_scale_split():
     try:
         engineered, cleaning = _engineer_from_sanitized_source(state)
         preprocessor = WastewaterPreprocessor()
-        train, test, split_metadata = preprocessor.prepare_and_save(engineered)
+        train, test, split_metadata = preprocessor.prepare_and_save(
+            engineered,
+            test_fraction=split_percentage / 100,
+        )
 
         output_dir = os.path.join(Config.UPLOAD_FOLDER, "output", "preprocessing")
         os.makedirs(output_dir, exist_ok=True)
@@ -628,8 +659,10 @@ def step6_scale_split():
                 "scaler_strategy": "standard",
                 "scaler_message": "Median, IQR/Winsorization, dan StandardScaler di-fit pada training saja.",
                 "split": True,
-                "split_ratio": 20,
-                "split_method": "chronological_80_20",
+                "split_ratio": split_percentage,
+                "split_method": (
+                    f"chronological_{100 - split_percentage}_{split_percentage}"
+                ),
                 "train_shape": [len(train), len(MODEL_FEATURES)],
                 "test_shape": [len(test), len(MODEL_FEATURES)],
                 "preprocessing_metadata": split_metadata,
@@ -661,7 +694,7 @@ def step6_scale_split():
         session["preprocessing_results"] = {
             "imputation": "training_median_only",
             "scaler": "training_standard_scaler",
-            "test_size_percentage": 20,
+            "test_size_percentage": split_percentage,
             "train_rows": len(train),
             "train_cols": len(MODEL_FEATURES),
             "test_rows": len(test),
