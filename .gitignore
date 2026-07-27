@@ -1,5 +1,9 @@
 tests
-uploads/dataset/*
-models/*
-logs/*
+
+uploads/dataset/
+uploads/dataset/*.json
+
+models/
+logs/
+output/
 browser-checks

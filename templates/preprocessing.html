@@ -1031,9 +1031,16 @@ block extra_css %}
                 </td>
               </tr>
               <tr>
-                <td class="fw-semibold text-start ps-4">Outlier IQR</td>
+                <td class="text-start ps-4">
+                  <div class="fw-semibold">Feature Values Outside IQR</div>
+                  <div class="small text-muted">
+                    Jumlah nilai fitur, bukan jumlah baris
+                  </div>
+                </td>
                 <td>{{ state.comparison.before_outliers }}</td>
-                <td>{{ state.comparison.after_outliers }}</td>
+                <td class="text-success fw-bold">
+                  {{ state.comparison.after_outliers }}
+                </td>
               </tr>
               <tr>
                 <td class="fw-semibold text-start ps-4">
@@ -1046,6 +1053,44 @@ block extra_css %}
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="alert alert-light border-0 small m-3" role="note">
+          <h6 class="fw-bold text-primary mb-2">
+            <i class="fas fa-info-circle me-2"></i>Penjelasan Penanganan Outlier
+          </h6>
+          <div class="row g-2 mb-2">
+            <div class="col-sm-4">
+              <span class="text-muted">Training clipped:</span>
+              <strong
+                >{{ state.comparison.outlier_train_clipped | default(0)
+                }}</strong
+              >
+              nilai
+            </div>
+            <div class="col-sm-4">
+              <span class="text-muted">Testing clipped:</span>
+              <strong
+                >{{ state.comparison.outlier_test_clipped | default(0)
+                }}</strong
+              >
+              nilai
+            </div>
+            <div class="col-sm-4">
+              <span class="text-muted">Rows removed:</span>
+              <strong
+                >{{ state.comparison.outlier_rows_removed | default(0)
+                }}</strong
+              >
+            </div>
+          </div>
+          <p class="mb-0 text-muted">
+            Preprocessing tidak menghapus observasi outlier. Winsorization
+            melakukan clipping terhadap nilai fitur di luar batas IQR. Batas
+            tersebut dihitung hanya dari dataset training, kemudian diterapkan
+            pada dataset training dan testing. Satu baris dapat memiliki lebih
+            dari satu nilai fitur yang di-clipping; karena itu angka ini berbeda
+            dari jumlah baris outlier diagnostik pada halaman EDA.
+          </p>
         </div>
       </div>
     </div>

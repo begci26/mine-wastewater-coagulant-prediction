@@ -5,7 +5,17 @@ import shutil
 import joblib
 import pandas as pd
 import plotly.express as px
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, send_from_directory, session, url_for
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
 
 from config import Config
 from ml.preprocessor import FatalConversionError, WastewaterPreprocessor
@@ -90,7 +100,9 @@ def parse_test_split_percent(raw_value):
 
 
 def _initial_state():
-    dataset = pd.read_csv(get_dataset_path()) if check_dataset_uploaded() else pd.DataFrame()
+    dataset = (
+        pd.read_csv(get_dataset_path()) if check_dataset_uploaded() else pd.DataFrame()
+    )
     sanitization = {
         key: value
         for key, value in load_sanitization_summary().items()
@@ -215,7 +227,9 @@ def _migrate_legacy_status(state):
     ):
         return False
     try:
-        preprocessor = joblib.load(os.path.join(Config.MODEL_FOLDER, "preprocessor.joblib"))
+        preprocessor = joblib.load(
+            os.path.join(Config.MODEL_FOLDER, "preprocessor.joblib")
+        )
         X_train_raw = pd.read_csv(_processed_file("x_train_raw.csv"))
         X_test_raw = pd.read_csv(_processed_file("x_test_raw.csv"))
         evidence = preprocessor.processing_status_metadata(X_train_raw, X_test_raw)
@@ -224,7 +238,9 @@ def _migrate_legacy_status(state):
         state["status_migrated_from_legacy_evidence"] = True
         return True
     except Exception as error:
-        app_logger.warning("Legacy preprocessing status could not be verified: %s", error)
+        app_logger.warning(
+            "Legacy preprocessing status could not be verified: %s", error
+        )
         return False
 
 
@@ -250,6 +266,20 @@ def _synchronize_preprocessing_status(state):
     if _has_completed_evidence(metadata):
         imputation = metadata["imputation"]
         outlier = metadata["outlier_handling"]
+
+        outlier_train_clipped = int(outlier.get("total_train_clipped", 0) or 0)
+        outlier_test_clipped = int(outlier.get("total_test_clipped", 0) or 0)
+        outlier_total_clipped = outlier_train_clipped + outlier_test_clipped
+        comparison = {
+            **state.get("comparison", {}),
+            "before_outliers": outlier_total_clipped,
+            "after_outliers": 0,
+            "outlier_train_clipped": outlier_train_clipped,
+            "outlier_test_clipped": outlier_test_clipped,
+            "outlier_rows_removed": 0,
+            "outlier_unit": "feature_values",
+        }
+
         missing_before = int(imputation.get("total_missing_before", 0))
         missing_after = int(imputation.get("total_missing_after", 0))
         imputation_status = (
@@ -272,16 +302,24 @@ def _synchronize_preprocessing_status(state):
                 "outliers_handled": True,
                 "outliers_strategy": "train_fitted_winsorization",
                 "outliers_stats": outlier.get("bounds", {}),
-                "outliers_count": int(outlier.get("total_train_clipped", 0))
-                + int(outlier.get("total_test_clipped", 0)),
-                "outliers_handled_count": int(outlier.get("total_train_clipped", 0))
-                + int(outlier.get("total_test_clipped", 0)),
+                # Jumlah nilai/sel fitur yang berada di luar batas IQR
+                # sebelum clipping. Ini bukan jumlah baris.
+                "outliers_count": outlier_total_clipped,
+                "outliers_handled_count": outlier_total_clipped,
+                "outlier_train_clipped": outlier_train_clipped,
+                "outlier_test_clipped": outlier_test_clipped,
+                "outlier_rows_removed": 0,
+                "outlier_unit": "feature_values",
+                "comparison": comparison,
                 "outliers_message": (
-                    "Batas IQR telah dihitung dari data training dan diterapkan pada "
-                    "data training dan testing."
-                    if int(outlier.get("total_train_clipped", 0))
-                    + int(outlier.get("total_test_clipped", 0))
-                    else "Pemeriksaan selesai, tidak ada nilai yang memerlukan clipping."
+                    f"{outlier_total_clipped} nilai fitur berada di luar batas "
+                    "IQR dan telah di-clipping menggunakan batas yang dihitung "
+                    "dari data training. Tidak ada baris yang dihapus."
+                    if outlier_total_clipped > 0
+                    else (
+                        "Pemeriksaan selesai, tidak ada nilai yang memerlukan "
+                        "clipping dan tidak ada baris yang dihapus."
+                    )
                 ),
                 "automatic_step_status": {
                     "imputation": imputation_status,
@@ -394,7 +432,9 @@ def _engineer_from_sanitized_source(state):
                 "T1/T2/T3 dibuat dari tiga observasi sebelumnya; Efisiensi_TSS, "
                 "Delta_pH, dan Beban_TSS dibuat tanpa fitur rasio kimia."
             ),
-            "feature_engineering_validation": {feature: feature in engineered.columns for feature in MODEL_FEATURES},
+            "feature_engineering_validation": {
+                feature: feature in engineered.columns for feature in MODEL_FEATURES
+            },
             "lag_rows_deleted": cleaning["lag_incomplete_rows_removed"],
             "current_shape": list(engineered.shape),
             "cleaning_summary": cleaning,
@@ -422,7 +462,9 @@ def _write_conversion_report(report):
     pd.DataFrame(details, columns=columns).to_csv(
         os.path.join(output_dir, "conversion_report.csv"), index=False
     )
-    with open(os.path.join(output_dir, "conversion_report.json"), "w", encoding="utf-8") as handle:
+    with open(
+        os.path.join(output_dir, "conversion_report.json"), "w", encoding="utf-8"
+    ) as handle:
         json.dump(report, handle, indent=2, ensure_ascii=False)
 
 
@@ -453,7 +495,12 @@ def reset():
     for path in [active_path, state_path]:
         if os.path.exists(path):
             os.remove(path)
-    for key in ["preprocessing_complete", "preprocessing_results", "training_complete", "evaluation_complete"]:
+    for key in [
+        "preprocessing_complete",
+        "preprocessing_results",
+        "training_complete",
+        "evaluation_complete",
+    ]:
         session.pop(key, None)
     flash("Status prapemrosesan direset ke dataset aktif tersanitasi.", "success")
     return redirect(url_for("preprocessing.index"))
@@ -628,12 +675,37 @@ def step6_scale_split():
             test_fraction=split_percentage / 100,
         )
 
+        # Ringkasan outlier dari preprocessing final.
+        # Nilai ini menghitung jumlah sel/fitur yang di-clipping,
+        # bukan jumlah baris yang memiliki outlier.
+        outlier_metadata = split_metadata.get(
+            "outlier_handling",
+            {},
+        )
+
+        outlier_train_clipped = int(outlier_metadata.get("total_train_clipped", 0) or 0)
+        outlier_test_clipped = int(outlier_metadata.get("total_test_clipped", 0) or 0)
+
+        outlier_values_before = outlier_train_clipped + outlier_test_clipped
+
+        # Karena Winsorization melakukan clipping ke lower/upper bound,
+        # setelah preprocessing tidak ada lagi nilai yang melewati batas.
+        outlier_values_after = 0
+
         output_dir = os.path.join(Config.UPLOAD_FOLDER, "output", "preprocessing")
         os.makedirs(output_dir, exist_ok=True)
-        export_columns = ["Timestamp", "Date", "Time"] + MODEL_FEATURES + [REQUIRED_TARGET]
-        export = engineered.loc[:, [column for column in export_columns if column in engineered.columns]]
-        export.to_csv(os.path.join(output_dir, "dataset_preprocessing.csv"), index=False)
-        export.to_excel(os.path.join(output_dir, "dataset_preprocessing.xlsx"), index=False)
+        export_columns = (
+            ["Timestamp", "Date", "Time"] + MODEL_FEATURES + [REQUIRED_TARGET]
+        )
+        export = engineered.loc[
+            :, [column for column in export_columns if column in engineered.columns]
+        ]
+        export.to_csv(
+            os.path.join(output_dir, "dataset_preprocessing.csv"), index=False
+        )
+        export.to_excel(
+            os.path.join(output_dir, "dataset_preprocessing.xlsx"), index=False
+        )
 
         sanitization = load_sanitization_summary()
         summary = {
@@ -647,10 +719,16 @@ def step6_scale_split():
             "waktu_eksekusi": pd.Timestamp.now().isoformat(),
             "jumlah_baris_akhir": len(engineered),
             "jumlah_kolom_akhir": len(export.columns),
-            "missing_value_akhir_sebelum_train_imputation": int(engineered[MODEL_FEATURES].isna().sum().sum()),
+            "missing_value_akhir_sebelum_train_imputation": int(
+                engineered[MODEL_FEATURES].isna().sum().sum()
+            ),
             "duplikat_akhir": int(engineered.duplicated().sum()),
         }
-        with open(os.path.join(output_dir, "summary_preprocessing.json"), "w", encoding="utf-8") as handle:
+        with open(
+            os.path.join(output_dir, "summary_preprocessing.json"),
+            "w",
+            encoding="utf-8",
+        ) as handle:
             json.dump(summary, handle, indent=2, ensure_ascii=False)
 
         state.update(
@@ -681,8 +759,12 @@ def step6_scale_split():
                     "after_missing": int(engineered[MODEL_FEATURES].isna().sum().sum()),
                     "before_duplicates": 0,
                     "after_duplicates": 0,
-                    "before_outliers": state.get("outliers_count", 0),
-                    "after_outliers": state.get("outliers_count", 0),
+                    "before_outliers": outlier_values_before,
+                    "after_outliers": outlier_values_after,
+                    "outlier_train_clipped": outlier_train_clipped,
+                    "outlier_test_clipped": outlier_test_clipped,
+                    "outlier_rows_removed": 0,
+                    "outlier_unit": "feature_values",
                     "before_features": 5,
                     "after_features": len(MODEL_FEATURES),
                 },
