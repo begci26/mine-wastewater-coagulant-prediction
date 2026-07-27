@@ -17,6 +17,7 @@ from utils.helpers import (
     REQUIRED_COLUMNS,
     REQUIRED_TARGET,
     forbidden_chemical_columns,
+    is_row_number_column,
 )
 
 NULL_MARKERS = {"", "-", "na", "n/a", "null", "none", "nan"}
@@ -370,7 +371,13 @@ class WastewaterPreprocessor:
         if missing:
             raise ValueError(f"Kolom wajib tidak ditemukan: {', '.join(missing)}")
 
-        clean, conversion_report = self.convert_types(df)
+        clean = df.drop(
+            columns=[
+                column for column in df.columns if is_row_number_column(column)
+            ],
+            errors="ignore",
+        )
+        clean, conversion_report = self.convert_types(clean)
         if conversion_report["has_fatal_errors"]:
             raise FatalConversionError(
                 "Konversi numerik fatal: " + "; ".join(conversion_report["fatal_errors"]),

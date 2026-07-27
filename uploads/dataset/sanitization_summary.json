@@ -1,11 +1,19 @@
 {
-  "original_row_count": 72,
-  "excluded_alum_lime_row_count": 0,
-  "ambiguous_chemical_row_count": 0,
-  "final_active_row_count": 72,
+  "original_row_count": 5171,
+  "original_column_count": 12,
+  "excluded_alum_lime_row_count": 190,
+  "ambiguous_chemical_row_count": 1,
+  "final_active_row_count": 4980,
   "removed_column_names": [
     "Unnamed: 0",
     "Dosis Alum (ppm)",
     "Dosis Lime (ppm)"
-  ]
+  ],
+  "status_counts": {
+    "Dipertahankan": 4980,
+    "Dikeluarkan - Menggunakan Alum": 22,
+    "Dikeluarkan - Menggunakan Lime": 26,
+    "Dikeluarkan - Menggunakan Alum & Lime": 142,
+    "Dikeluarkan - Kimia Ambigu": 1
+  }
 }

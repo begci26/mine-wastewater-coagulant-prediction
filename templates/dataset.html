@@ -215,6 +215,40 @@ block breadcrumb %}Dataset{% endblock %} {% block extra_css %}
     </div>
   </div>
   {% endif %}
+  {% if summary.sanitization_report_available %}
+  <div class="col-12 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div
+        class="card-body py-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
+      >
+        <div>
+          <h6 class="fw-bold text-dark mb-1">
+            <i class="fas fa-file-export text-primary me-2"></i>Laporan
+            Sanitasi Dataset
+          </h6>
+          <p class="small text-muted mb-0">
+            Memuat seluruh baris dan kolom sumber asli beserta status keputusan
+            sanitasi.
+          </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <a
+            href="{{ url_for('dataset.download_sanitization_csv') }}"
+            class="btn btn-outline-primary btn-sm"
+          >
+            <i class="fas fa-file-csv me-2"></i>Unduh Laporan Sanitasi CSV
+          </a>
+          <a
+            href="{{ url_for('dataset.download_sanitization_xlsx') }}"
+            class="btn btn-primary btn-sm"
+          >
+            <i class="fas fa-file-excel me-2"></i>Unduh Laporan Sanitasi XLSX
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
   <div class="col-12">
     <!-- Baris Informasi Dataset -->
     <div class="row g-3 mb-4">
@@ -251,12 +285,15 @@ block breadcrumb %}Dataset{% endblock %} {% block extra_css %}
       <div class="col-md-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center h-100 py-2">
           <div class="card-body p-2 d-flex flex-column justify-content-between">
-            <div class="text-muted small fw-semibold">Jumlah Kolom</div>
+            <div class="text-muted small fw-semibold">
+              Variabel Penelitian
+            </div>
             <div class="h3 fw-bold text-primary my-2">
               {{ summary.columns_count }}
             </div>
             <div class="text-muted small" style="font-size: 0.7rem">
-              Variabel numerik:
+              Total kolom sumber:
+              <strong>{{ summary.source_columns_count }}</strong> | Numerik:
               <strong>{{ summary.numeric_vars_count }}</strong> | Kategori:
               <strong>{{ summary.categorical_vars_count }}</strong>
             </div>

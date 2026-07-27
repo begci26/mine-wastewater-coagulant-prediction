@@ -6,7 +6,13 @@ import joblib
 from flask import Blueprint, render_template, session
 from config import Config
 from utils.logger import app_logger
-from utils.helpers import check_dataset_uploaded, get_dataset_path, REQUIRED_TARGET, REQUIRED_FEATURES
+from utils.helpers import (
+    check_dataset_uploaded,
+    get_dataset_path,
+    get_research_columns,
+    REQUIRED_TARGET,
+    REQUIRED_FEATURES,
+)
 import plotly.express as px
 import plotly.graph_objects as go
 
@@ -48,7 +54,11 @@ def index():
             row_count = len(df)
             
             # Hitung feature (kolom numeric selain No dan target)
-            feature_cols = [c for c in df.columns if c not in ['No', 'Date', 'Time', REQUIRED_TARGET]]
+            feature_cols = [
+                column
+                for column in get_research_columns(df)
+                if column not in ["Date", "Time", REQUIRED_TARGET]
+            ]
             feature_count = len(feature_cols)
             
             # Hitung missing values
@@ -56,7 +66,9 @@ def index():
             
             # Hitung outlier menggunakan IQR untuk semua kolom numerik
             outlier_count = 0
-            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            numeric_cols = df.loc[:, get_research_columns(df)].select_dtypes(
+                include=[np.number]
+            ).columns
             for col in numeric_cols:
                 q1 = df[col].quantile(0.25)
                 q3 = df[col].quantile(0.75)

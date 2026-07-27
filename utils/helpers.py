@@ -51,8 +51,13 @@ DATASET_PREVIEW_COLUMNS = [
 ROW_NUMBER_COLUMN_ALIASES = {
     "no",
     "nomor",
-    "nomorurut",
-    "rownumber",
+}
+SANITIZATION_STATUSES = {
+    "retained": "Dipertahankan",
+    "alum": "Dikeluarkan - Menggunakan Alum",
+    "lime": "Dikeluarkan - Menggunakan Lime",
+    "alum_lime": "Dikeluarkan - Menggunakan Alum & Lime",
+    "ambiguous": "Dikeluarkan - Kimia Ambigu",
 }
 # Backward-compatible name used by routes; it intentionally contains no chemicals.
 REQUIRED_FEATURES = BASE_INPUT_FEATURES + ["Kolom T1", "Kolom T2", "Kolom T3"]
@@ -80,11 +85,42 @@ def get_dataset_path():
     return os.path.join(Config.UPLOAD_FOLDER, "active_dataset.csv")
 
 
-def set_dataset_filename(filename):
-    """Remember the active upload without replacing its original filename."""
+def load_dataset_metadata():
+    metadata_path = os.path.join(Config.UPLOAD_FOLDER, "active_dataset.json")
+    try:
+        with open(metadata_path, encoding="utf-8") as handle:
+            metadata = json.load(handle)
+        return metadata if isinstance(metadata, dict) else {}
+    except (OSError, TypeError, ValueError):
+        return {}
+
+
+def set_dataset_filename(filename, source_archive_filename=None, original_filename=None):
+    """Remember active and raw-source filenames for the current upload."""
+    metadata = {"filename": os.path.basename(filename)}
+    if source_archive_filename:
+        metadata["source_archive_filename"] = os.path.basename(source_archive_filename)
+    if original_filename:
+        metadata["original_filename"] = os.path.basename(original_filename)
     metadata_path = os.path.join(Config.UPLOAD_FOLDER, "active_dataset.json")
     with open(metadata_path, "w", encoding="utf-8") as handle:
-        json.dump({"filename": os.path.basename(filename)}, handle, indent=2)
+        json.dump(metadata, handle, indent=2, ensure_ascii=False)
+
+
+def get_source_dataset_path():
+    filename = load_dataset_metadata().get("source_archive_filename")
+    if not filename:
+        return None
+    return os.path.join(Config.UPLOAD_FOLDER, "source_archive", os.path.basename(filename))
+
+
+def read_source_dataset(file_path):
+    extension = Path(file_path).suffix.casefold()
+    if extension == ".xlsx":
+        return pd.read_excel(file_path, sheet_name=0)
+    if extension == ".csv":
+        return pd.read_csv(file_path)
+    raise ValueError("Format sumber dataset tidak didukung.")
 
 
 def sanitization_summary_path():
@@ -103,18 +139,18 @@ def is_index_column(name):
     }
 
 
-def is_sequential_row_number_column(name, values):
-    """Identify a known row-number label only when its values form a sequence."""
-    if _normalise_column_name(name) not in ROW_NUMBER_COLUMN_ALIASES:
-        return False
-    numeric = pd.to_numeric(values, errors="coerce")
-    if numeric.isna().any() or numeric.empty or not np.equal(numeric, np.floor(numeric)).all():
-        return False
-    ordered = np.sort(numeric.astype(np.int64).to_numpy())
-    return bool(
-        ordered[0] in (0, 1)
-        and np.array_equal(ordered, np.arange(ordered[0], ordered[0] + len(ordered)))
-    )
+def is_unnamed_export_column(name):
+    """Identify unnamed index artifacts created by prior CSV/XLSX exports."""
+    return str(name).strip().casefold().startswith("unnamed:")
+
+
+def is_row_number_column(name):
+    """Match only the explicitly supported No/Nomor source metadata labels."""
+    return str(name).strip().casefold() in ROW_NUMBER_COLUMN_ALIASES
+
+
+def get_research_columns(df):
+    return [column for column in df.columns if not is_row_number_column(column)]
 
 
 def is_alum_lime_ratio_column(name):
@@ -134,6 +170,76 @@ def forbidden_chemical_columns(columns):
     return forbidden
 
 
+def build_sanitization_report(df):
+    """Append a per-row decision to an untouched copy of the source frame."""
+    source = df.drop(
+        columns=[
+            column for column in df.columns if is_unnamed_export_column(column)
+        ],
+        errors="ignore",
+    ).copy()
+    stripped_columns = [str(column).strip() for column in source.columns]
+    if len(set(stripped_columns)) != len(stripped_columns):
+        raise ValueError("Nama kolom duplikat terdeteksi setelah spasi nama kolom dibersihkan.")
+    lookup = dict(zip(stripped_columns, source.columns))
+    chemical_presence = [
+        chemical in lookup for chemical in OPTIONAL_CHEMICAL_COLUMNS
+    ]
+    if any(chemical_presence) and not all(chemical_presence):
+        missing = next(
+            chemical
+            for chemical, present in zip(OPTIONAL_CHEMICAL_COLUMNS, chemical_presence)
+            if not present
+        )
+        raise ValueError(
+            f"Kolom seleksi kimia tidak lengkap. {missing} diperlukan untuk "
+            "menentukan observasi tanpa Alum dan Lime secara aman."
+        )
+
+    if not any(chemical_presence):
+        statuses = pd.Series(
+            SANITIZATION_STATUSES["retained"], index=source.index, dtype=object
+        )
+    else:
+        alum = pd.to_numeric(source[lookup[OPTIONAL_CHEMICAL_COLUMNS[0]]], errors="coerce")
+        lime = pd.to_numeric(source[lookup[OPTIONAL_CHEMICAL_COLUMNS[1]]], errors="coerce")
+        ambiguous = alum.isna() | lime.isna() | (alum < 0) | (lime < 0)
+        statuses = pd.Series(SANITIZATION_STATUSES["retained"], index=source.index, dtype=object)
+        statuses.loc[(~ambiguous) & alum.gt(0) & lime.eq(0)] = SANITIZATION_STATUSES["alum"]
+        statuses.loc[(~ambiguous) & alum.eq(0) & lime.gt(0)] = SANITIZATION_STATUSES["lime"]
+        statuses.loc[(~ambiguous) & alum.gt(0) & lime.gt(0)] = SANITIZATION_STATUSES["alum_lime"]
+        statuses.loc[ambiguous] = SANITIZATION_STATUSES["ambiguous"]
+
+    report = source.copy()
+    report["Status"] = statuses
+    return report
+
+
+def sanitization_counts(report):
+    counts = report["Status"].value_counts().to_dict()
+    retained = int(counts.get(SANITIZATION_STATUSES["retained"], 0))
+    ambiguous = int(counts.get(SANITIZATION_STATUSES["ambiguous"], 0))
+    chemical = int(
+        sum(
+            counts.get(SANITIZATION_STATUSES[key], 0)
+            for key in ("alum", "lime", "alum_lime")
+        )
+    )
+    total = retained + chemical + ambiguous
+    if total != len(report):
+        raise ValueError(
+            "Validasi laporan sanitasi gagal: jumlah status tidak sama dengan "
+            "jumlah baris sumber."
+        )
+    return {
+        "retained": retained,
+        "chemical_removed": chemical,
+        "ambiguous_removed": ambiguous,
+        "original": int(len(report)),
+        "by_status": {status: int(counts.get(status, 0)) for status in SANITIZATION_STATUSES.values()},
+    }
+
+
 def sanitize_dataframe(df):
     """Select CL-80-only observations and remove all chemical/index columns."""
     clean = df.copy()
@@ -145,27 +251,10 @@ def sanitize_dataframe(df):
     if missing:
         raise ValueError(f"Kolom wajib tidak ditemukan: {', '.join(missing)}")
 
-    original_rows = len(clean)
-    alum_col, lime_col = OPTIONAL_CHEMICAL_COLUMNS
-    chemical_presence = [column in clean.columns for column in OPTIONAL_CHEMICAL_COLUMNS]
-    if any(chemical_presence) and not all(chemical_presence):
-        missing_chemical = lime_col if alum_col in clean.columns else alum_col
-        raise ValueError(
-            f"Kolom seleksi kimia tidak lengkap. {missing_chemical} diperlukan untuk "
-            "menentukan observasi tanpa Alum dan Lime secara aman."
-        )
-
-    excluded_nonzero = 0
-    ambiguous = 0
-    if all(chemical_presence):
-        alum = pd.to_numeric(clean[alum_col], errors="coerce")
-        lime = pd.to_numeric(clean[lime_col], errors="coerce")
-        ambiguous_mask = alum.isna() | lime.isna() | (alum < 0) | (lime < 0)
-        nonzero_mask = (~ambiguous_mask) & ((alum > 0) | (lime > 0))
-        valid_zero_mask = (~ambiguous_mask) & alum.eq(0) & lime.eq(0)
-        ambiguous = int(ambiguous_mask.sum())
-        excluded_nonzero = int(nonzero_mask.sum())
-        clean = clean.loc[valid_zero_mask].copy()
+    report = build_sanitization_report(df)
+    counts = sanitization_counts(report)
+    retained_mask = report["Status"].eq(SANITIZATION_STATUSES["retained"]).to_numpy()
+    clean = clean.loc[retained_mask].copy()
 
     removed_columns = [
         column
@@ -180,11 +269,13 @@ def sanitize_dataframe(df):
         raise ValueError(f"Kolom kimia terlarang masih tersisa: {', '.join(forbidden)}")
 
     summary = {
-        "original_row_count": int(original_rows),
-        "excluded_alum_lime_row_count": excluded_nonzero,
-        "ambiguous_chemical_row_count": ambiguous,
+        "original_row_count": counts["original"],
+        "original_column_count": int(len(df.columns)),
+        "excluded_alum_lime_row_count": counts["chemical_removed"],
+        "ambiguous_chemical_row_count": counts["ambiguous_removed"],
         "final_active_row_count": int(len(clean)),
         "removed_column_names": removed_columns,
+        "status_counts": counts["by_status"],
     }
     return clean.reset_index(drop=True), summary
 
@@ -258,11 +349,9 @@ def get_dataset_summary(file_path):
     try:
         df = pd.read_csv(file_path)
         row_number_columns = [
-            column
-            for column in df.columns
-            if is_sequential_row_number_column(column, df[column])
+            column for column in df.columns if is_row_number_column(column)
         ]
-        analytical_df = df.drop(columns=row_number_columns)
+        analytical_df = df.loc[:, get_research_columns(df)]
         preview_source_columns = [column for _, column in DATASET_PREVIEW_COLUMNS]
         missing_preview_columns = [
             column for column in preview_source_columns if column not in df.columns
@@ -272,12 +361,16 @@ def get_dataset_summary(file_path):
                 "Kolom pratinjau tidak ditemukan: " + ", ".join(missing_preview_columns)
             )
 
+        preview_number_column = row_number_columns[0] if row_number_columns else None
+
         def preview_rows(frame):
             rows = frame.loc[:, preview_source_columns].replace({np.nan: None}).values.tolist()
-            return [
-                [int(index) + 1, *row]
-                for index, row in zip(frame.index, rows)
-            ]
+            numbers = (
+                frame[preview_number_column].replace({np.nan: None}).tolist()
+                if preview_number_column
+                else [int(index) + 1 for index in frame.index]
+            )
+            return [[number, *row] for number, row in zip(numbers, rows)]
 
         shape = analytical_df.shape
         size_bytes = os.path.getsize(file_path)
@@ -325,6 +418,9 @@ def get_dataset_summary(file_path):
             "filesize": file_size,
             "rows": len(df),
             "columns_count": shape[1],
+            "source_columns_count": int(
+                load_sanitization_summary().get("original_column_count", len(df.columns))
+            ),
             "numeric_vars_count": len(numeric_cols),
             "categorical_vars_count": shape[1] - len(numeric_cols),
             "total_missing": int(analytical_df.isnull().sum().sum()),
@@ -332,10 +428,16 @@ def get_dataset_summary(file_path):
             "row_number_columns": row_number_columns,
             "columns_info": columns_info,
             "stats": stats,
-            "preview_cols": ["NO", *[label for label, _ in DATASET_PREVIEW_COLUMNS]],
+            "preview_cols": [
+                preview_number_column.upper() if preview_number_column else "NO",
+                *[label for label, _ in DATASET_PREVIEW_COLUMNS],
+            ],
             "head_data": preview_rows(df.head(10)),
             "tail_data": preview_rows(df.tail(10)),
             "sanitization": load_sanitization_summary(),
+            "sanitization_report_available": bool(
+                get_source_dataset_path() and os.path.exists(get_source_dataset_path())
+            ),
         }
     except Exception as error:
         app_logger.error(f"Error summarizing dataset: {error}")

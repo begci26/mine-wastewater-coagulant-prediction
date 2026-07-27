@@ -1,2 +1,0 @@
-Date,Time,Inlet TSS (mg/L),Inlet pH,Outlet TSS (mg/L),Outlet pH,Inlet Disch (m3/s),Kolom T1,Kolom T2,Kolom T3,Efisiensi_TSS,Delta_pH,Beban_TSS,Predicted_Dosis_CL80_ppm,Model,Prediction_Timestamp
-2026-07-27,14:34,498.0,7.89,95.0,7.88,2.29,1.063264221158958,1.063264221158958,1.063264221158958,80.92369477911646,-0.009999999999999787,1140.42,1.2639,XGBoost,2026-07-27 14:34

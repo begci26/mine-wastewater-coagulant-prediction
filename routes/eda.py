@@ -25,11 +25,16 @@ import matplotlib.pyplot as plt
 
 from config import Config
 from utils.logger import app_logger
-from utils.helpers import MODEL_FEATURES, check_dataset_uploaded, REQUIRED_TARGET
+from utils.helpers import (
+    MODEL_FEATURES,
+    check_dataset_uploaded,
+    get_research_columns,
+    REQUIRED_TARGET,
+)
 
 # Inisialisasi blueprint
 eda_bp = Blueprint('eda', __name__)
-NON_ANALYTIC_COLUMNS = {"No", "Date", "Time", "Timestamp", "Datetime"}
+NON_ANALYTIC_COLUMNS = {"Date", "Time", "Timestamp", "Datetime"}
 
 def get_processed_data():
     """Membaca dataset hasil prapemrosesan (df_active.csv)."""
@@ -257,7 +262,8 @@ def generate_bab4_outputs(df):
         os.makedirs(output_dir, exist_ok=True)
         
         # 1. Excel Ringkasan Statistik
-        desc_df = df.describe(include=[np.number])
+        research_df = df.loc[:, get_research_columns(df)]
+        desc_df = research_df.describe(include=[np.number])
         excel_path = os.path.join(output_dir, 'summary_statistic.xlsx')
         desc_df.to_excel(excel_path, engine='openpyxl')
         
@@ -431,10 +437,11 @@ def index():
     generate_bab4_outputs(df)
     
     # 1. Ringkasan Fitur
+    research_df = df.loc[:, get_research_columns(df)]
     summary_cards = {
         'rows': len(df),
-        'cols': len(df.columns),
-        'missing': int(df.isnull().sum().sum()),
+        'cols': len(research_df.columns),
+        'missing': int(research_df.isnull().sum().sum()),
         'duplicates': int(df.duplicated().sum()),
         'target': REQUIRED_TARGET
     }
@@ -546,13 +553,12 @@ def statistics():
         return jsonify({'error': 'Dataset hasil preprocessing tidak ditemukan'}), 404
         
     try:
-        numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
-        if 'No' in numeric_cols:
-            numeric_cols.remove('No')
+        research_df = df.loc[:, get_research_columns(df)]
+        numeric_cols = research_df.select_dtypes(include=['number']).columns.tolist()
             
         stats_list = []
         for col in numeric_cols:
-            col_series = df[col].dropna()
+            col_series = research_df[col].dropna()
             
             # Perhitungan kurtosis dan skewness manual/pandas
             skew = col_series.skew()

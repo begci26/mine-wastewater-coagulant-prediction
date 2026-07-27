@@ -1,2 +1,5 @@
 tests
 uploads/dataset/*
+models/*
+logs/*
+browser-checks
