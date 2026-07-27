@@ -1,8 +1,8 @@
 {
-  "original_row_count": 5700,
-  "excluded_alum_lime_row_count": 190,
-  "ambiguous_chemical_row_count": 315,
-  "final_active_row_count": 5195,
+  "original_row_count": 72,
+  "excluded_alum_lime_row_count": 0,
+  "ambiguous_chemical_row_count": 0,
+  "final_active_row_count": 72,
   "removed_column_names": [
     "Unnamed: 0",
     "Dosis Alum (ppm)",

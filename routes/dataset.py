@@ -4,6 +4,7 @@ import shutil
 from datetime import datetime
 import pandas as pd
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from werkzeug.utils import secure_filename
 from config import Config
 from utils.logger import app_logger
 from utils.helpers import (
@@ -15,6 +16,7 @@ from utils.helpers import (
     invalidate_generated_artifacts,
     sanitize_dataframe,
     save_sanitization_summary,
+    set_dataset_filename,
 )
 
 # Inisialisasi blueprint
@@ -71,9 +73,16 @@ def upload():
             stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             shutil.copy2(temp_path, os.path.join(archive_dir, f"original_{stamp}.{extension}"))
 
+            previous_path = get_dataset_path()
             invalidate_generated_artifacts()
-            save_path = os.path.join(Config.UPLOAD_FOLDER, "active_dataset.csv")
+            original_filename = secure_filename(file.filename)
+            if not original_filename:
+                raise ValueError("Nama file tidak valid.")
+            save_path = os.path.join(Config.UPLOAD_FOLDER, original_filename)
+            if previous_path != save_path and os.path.isfile(previous_path):
+                os.remove(previous_path)
             sanitized.to_csv(save_path, index=False)
+            set_dataset_filename(original_filename)
             save_sanitization_summary(sanitization)
 
             session['dataset_uploaded'] = True

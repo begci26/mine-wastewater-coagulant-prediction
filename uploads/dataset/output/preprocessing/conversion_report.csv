@@ -1,4 +1,0 @@
-column,row_index,timestamp,original_value,root_cause,action,final_status
-Inlet pH,3194,2026-01-01 01:00:00,"7,67",Format lokal/whitespace,Dinormalisasi lalu dikonversi,berhasil_dinormalisasi
-Inlet pH,3599,2026-01-20 17:00:00,,Nilai kosong,Dipertahankan sebagai missing; akan diimputasi dengan median training,missing_akan_diimputasi
-Inlet pH,3606,2026-01-20 00:00:00,7..9,Terdapat lebih dari satu titik desimal,Dikonversi menjadi missing; akan diimputasi dengan median training,missing_akan_diimputasi

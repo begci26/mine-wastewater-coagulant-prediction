@@ -42,6 +42,18 @@ MODEL_FEATURES = [
     "Delta_pH",
     "Beban_TSS",
 ]
+DATASET_PREVIEW_COLUMNS = [
+    ("DATE", "Date"),
+    ("TIME", "Time"),
+    ("INLET TSS (MG/L)", "Inlet TSS (mg/L)"),
+    ("DOSIS CL-80", REQUIRED_TARGET),
+]
+ROW_NUMBER_COLUMN_ALIASES = {
+    "no",
+    "nomor",
+    "nomorurut",
+    "rownumber",
+}
 # Backward-compatible name used by routes; it intentionally contains no chemicals.
 REQUIRED_FEATURES = BASE_INPUT_FEATURES + ["Kolom T1", "Kolom T2", "Kolom T3"]
 ARTIFACT_SCHEMA_VERSION = 2
@@ -57,7 +69,22 @@ def check_dataset_uploaded():
 
 
 def get_dataset_path():
+    metadata_path = os.path.join(Config.UPLOAD_FOLDER, "active_dataset.json")
+    try:
+        with open(metadata_path, encoding="utf-8") as handle:
+            filename = os.path.basename(json.load(handle)["filename"])
+        if filename:
+            return os.path.join(Config.UPLOAD_FOLDER, filename)
+    except (OSError, KeyError, TypeError, ValueError):
+        pass
     return os.path.join(Config.UPLOAD_FOLDER, "active_dataset.csv")
+
+
+def set_dataset_filename(filename):
+    """Remember the active upload without replacing its original filename."""
+    metadata_path = os.path.join(Config.UPLOAD_FOLDER, "active_dataset.json")
+    with open(metadata_path, "w", encoding="utf-8") as handle:
+        json.dump({"filename": os.path.basename(filename)}, handle, indent=2)
 
 
 def sanitization_summary_path():
@@ -74,6 +101,20 @@ def is_index_column(name):
         "index",
         "level0",
     }
+
+
+def is_sequential_row_number_column(name, values):
+    """Identify a known row-number label only when its values form a sequence."""
+    if _normalise_column_name(name) not in ROW_NUMBER_COLUMN_ALIASES:
+        return False
+    numeric = pd.to_numeric(values, errors="coerce")
+    if numeric.isna().any() or numeric.empty or not np.equal(numeric, np.floor(numeric)).all():
+        return False
+    ordered = np.sort(numeric.astype(np.int64).to_numpy())
+    return bool(
+        ordered[0] in (0, 1)
+        and np.array_equal(ordered, np.arange(ordered[0], ordered[0] + len(ordered)))
+    )
 
 
 def is_alum_lime_ratio_column(name):
@@ -189,6 +230,9 @@ def delete_active_dataset():
             summary_path = sanitization_summary_path()
             if os.path.exists(summary_path):
                 os.remove(summary_path)
+            metadata_path = os.path.join(Config.UPLOAD_FOLDER, "active_dataset.json")
+            if os.path.exists(metadata_path):
+                os.remove(metadata_path)
             app_logger.info("Active dataset and generated artifacts deleted.")
             return True
     except Exception as error:
@@ -213,29 +257,55 @@ def dataframe_has_forbidden_chemicals(df):
 def get_dataset_summary(file_path):
     try:
         df = pd.read_csv(file_path)
-        shape = df.shape
+        row_number_columns = [
+            column
+            for column in df.columns
+            if is_sequential_row_number_column(column, df[column])
+        ]
+        analytical_df = df.drop(columns=row_number_columns)
+        preview_source_columns = [column for _, column in DATASET_PREVIEW_COLUMNS]
+        missing_preview_columns = [
+            column for column in preview_source_columns if column not in df.columns
+        ]
+        if missing_preview_columns:
+            raise ValueError(
+                "Kolom pratinjau tidak ditemukan: " + ", ".join(missing_preview_columns)
+            )
+
+        def preview_rows(frame):
+            rows = frame.loc[:, preview_source_columns].replace({np.nan: None}).values.tolist()
+            return [
+                [int(index) + 1, *row]
+                for index, row in zip(frame.index, rows)
+            ]
+
+        shape = analytical_df.shape
         size_bytes = os.path.getsize(file_path)
         file_size = (
             f"{size_bytes / (1024 * 1024):.2f} MB"
             if size_bytes >= 1024 * 1024
             else f"{size_bytes / 1024:.2f} KB"
         )
-        numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+        numeric_cols = analytical_df.select_dtypes(include=["number"]).columns.tolist()
         columns_info = []
-        for column in df.columns:
-            missing_count = int(df[column].isnull().sum())
+        for column in analytical_df.columns:
+            missing_count = int(analytical_df[column].isnull().sum())
             columns_info.append(
                 {
                     "name": column,
-                    "type": str(df[column].dtype),
+                    "type": str(analytical_df[column].dtype),
                     "missing_count": missing_count,
-                    "missing_percentage": round(100 * missing_count / len(df), 2) if len(df) else 0,
-                    "unique_count": int(df[column].nunique()),
+                    "missing_percentage": (
+                        round(100 * missing_count / len(analytical_df), 2)
+                        if len(analytical_df)
+                        else 0
+                    ),
+                    "unique_count": int(analytical_df[column].nunique()),
                 }
             )
         stats = []
         for column in numeric_cols:
-            values = df[column].describe()
+            values = analytical_df[column].describe()
             stats.append(
                 {
                     "name": column,
@@ -253,17 +323,18 @@ def get_dataset_summary(file_path):
             "success": True,
             "filename": os.path.basename(file_path),
             "filesize": file_size,
-            "rows": shape[0],
+            "rows": len(df),
             "columns_count": shape[1],
             "numeric_vars_count": len(numeric_cols),
             "categorical_vars_count": shape[1] - len(numeric_cols),
-            "total_missing": int(df.isnull().sum().sum()),
+            "total_missing": int(analytical_df.isnull().sum().sum()),
             "duplicate_count": int(df.duplicated().sum()),
+            "row_number_columns": row_number_columns,
             "columns_info": columns_info,
             "stats": stats,
-            "preview_cols": list(df.columns),
-            "head_data": df.head(10).replace({np.nan: None}).values.tolist(),
-            "tail_data": df.tail(10).replace({np.nan: None}).values.tolist(),
+            "preview_cols": ["NO", *[label for label, _ in DATASET_PREVIEW_COLUMNS]],
+            "head_data": preview_rows(df.head(10)),
+            "tail_data": preview_rows(df.tail(10)),
             "sanitization": load_sanitization_summary(),
         }
     except Exception as error:
