@@ -906,3 +906,125 @@ RuntimeError: simulated preprocessing failure
 2026-07-27 17:52:14,851 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
 2026-07-27 17:52:21,903 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
 2026-07-27 17:52:21,997 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
+2026-07-27 18:57:09,574 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 673, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-27 18:57:38,848 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 673, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-27 18:59:57,085 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-27 18:59:59,138 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-28 09:12:52,610 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-28 09:12:55,226 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-28 09:13:05,575 - coagulant_app - WARNING - 404 Error: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2026-07-28 09:34:46,242 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-28 09:35:02,202 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
+2026-07-28 09:35:02,325 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
+2026-07-28 09:35:04,960 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-28 09:35:05,615 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 673, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-28 09:35:44,217 - coagulant_app - ERROR - Batch prediction failed: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 436, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Batch memiliki timestamp duplikat; perbaiki sebelum prediksi: 2025-06-01 00:00:00
+2026-07-28 09:35:44,326 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 458, in predict_batch
+    raise ValueError(BATCH_HISTORY_ERROR)
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history.
+2026-07-28 09:35:44,335 - coagulant_app - ERROR - Batch prediction failed: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 460, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Prediksi batch memerlukan tiga riwayat dosis CL-80 sebelum baris pertama yang diprediksi. Sediakan riwayat pada dataset aktif atau sertakan minimal tiga baris awal dengan nilai Dosis CL-80 sebagai seed history. File batch juga harus memiliki sedikitnya satu baris untuk diprediksi.
+2026-07-28 09:35:44,343 - coagulant_app - ERROR - Batch prediction failed: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\ml\predictor.py", line 468, in predict_batch
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Tiga baris awal yang akan digunakan sebagai seed history harus memiliki nilai Dosis CL-80 numerik dan positif.
+2026-07-28 09:35:44,488 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
+2026-07-28 09:35:44,600 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
+2026-07-28 09:35:50,119 - coagulant_app - INFO - BAB IV Tesis outputs (10 PNGs, 1 Excel, 1 PDF) successfully generated.
+2026-07-28 09:35:51,396 - coagulant_app - WARNING - Model artifact compatibility check failed: Model bukan artefak 11 fitur dalam urutan yang diwajibkan.
+2026-07-28 09:35:51,996 - coagulant_app - ERROR - Final preprocessing failed: simulated preprocessing failure
+Traceback (most recent call last):
+  File "D:\Dillon\aplikasi-tesis-python\aplikasi\routes\preprocessing.py", line 673, in step6_scale_split
+    train, test, split_metadata = preprocessor.prepare_and_save(
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        engineered,
+        ^^^^^^^^^^^
+        test_fraction=split_percentage / 100,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Python314\Lib\unittest\mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\unittest\mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: simulated preprocessing failure
+2026-07-28 09:37:28,366 - coagulant_app - INFO - Starting Coagulant Prediction Flask application...
+2026-07-28 09:37:33,643 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}
+2026-07-28 09:37:33,758 - coagulant_app - INFO - Dataset uploaded and sanitized: {'original_row_count': 5, 'original_column_count': 11, 'excluded_alum_lime_row_count': 3, 'ambiguous_chemical_row_count': 1, 'final_active_row_count': 1, 'removed_column_names': ['Dosis Alum (ppm)', 'Dosis Lime (ppm)'], 'status_counts': {'Dipertahankan': 1, 'Dikeluarkan - Menggunakan Alum': 1, 'Dikeluarkan - Menggunakan Lime': 1, 'Dikeluarkan - Menggunakan Alum & Lime': 1, 'Dikeluarkan - Kimia Ambigu': 1}}

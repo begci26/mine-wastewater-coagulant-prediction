@@ -28,6 +28,59 @@ block breadcrumb %}Dataset{% endblock %} {% block extra_css %}
     min-width: 100% !important;
     white-space: nowrap;
   }
+
+  .sanitization-summary-card {
+    overflow: hidden;
+    border-left: 4px solid #0ea5e9 !important;
+  }
+
+  .sanitization-icon {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    color: #0284c7;
+    background: #e0f2fe;
+    border-radius: 10px;
+  }
+
+  .sanitization-metric {
+    height: 100%;
+    padding: 0.8rem 0.9rem;
+    background: #f8fafc;
+    border: 1px solid #e8eef5;
+    border-radius: 10px;
+  }
+
+  .sanitization-metric-label {
+    color: #64748b;
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
+
+  .sanitization-metric-value {
+    margin-top: 0.2rem;
+    color: #0f172a;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  .sanitization-metric-value.removed {
+    color: #b45309;
+  }
+
+  .sanitization-metric-value.active {
+    color: #047857;
+  }
+
+  .sanitization-trace-note {
+    color: #475569;
+    background: #f0f9ff;
+    border-top: 1px solid #e0f2fe;
+  }
 </style>
 {% endblock %} {% block content %}
 <div class="row">
@@ -202,16 +255,93 @@ block breadcrumb %}Dataset{% endblock %} {% block extra_css %}
   <!-- SECTION 6: Area Hasil -->
   {% if is_uploaded and summary %} {% if summary.sanitization %}
   <div class="col-12 mb-3">
-    <div class="alert alert-info mb-0 small">
-      <strong>Ringkasan sanitasi:</strong>
-      {{ summary.sanitization.original_row_count }} baris asli; {{
-      summary.sanitization.excluded_alum_lime_row_count }} baris dengan bahan
-      kimia dikeluarkan; {{ summary.sanitization.ambiguous_chemical_row_count }}
-      baris kimia ambigu dikeluarkan; {{
-      summary.sanitization.final_active_row_count }} baris menjadi dataset
-      aktif. Kolom dihapus: {{ summary.sanitization.removed_column_names |
-      join(', ') if summary.sanitization.removed_column_names else 'tidak ada'
-      }}.
+    <div
+      class="card sanitization-summary-card border-0 shadow-sm"
+      aria-labelledby="sanitization-summary-title"
+    >
+      <div class="card-body p-3 p-lg-4">
+        <div
+          class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3"
+        >
+          <div class="d-flex align-items-center gap-3">
+            <span class="sanitization-icon">
+              <i class="fas fa-filter"></i>
+            </span>
+            <div>
+              <h6
+                id="sanitization-summary-title"
+                class="fw-bold text-dark mb-1"
+              >
+                Ringkasan sanitasi dataset
+              </h6>
+              <p class="small text-muted mb-0">
+                Hasil seleksi observasi sebelum dataset digunakan.
+              </p>
+            </div>
+          </div>
+          <span class="badge rounded-pill bg-success px-3 py-2">
+            <i class="fas fa-check-circle me-1"></i>Sanitasi selesai
+          </span>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-sm-6 col-xl-3">
+            <div class="sanitization-metric">
+              <div class="sanitization-metric-label">Raw dataset</div>
+              <div class="sanitization-metric-value">
+                {{ summary.sanitization.original_row_count }}
+                <span class="fs-6 fw-normal text-muted">rows</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="sanitization-metric">
+              <div class="sanitization-metric-label">
+                Removed due to Alum/Lime
+              </div>
+              <div class="sanitization-metric-value removed">
+                {{ summary.sanitization.excluded_alum_lime_row_count }}
+                <span class="fs-6 fw-normal text-muted">rows</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="sanitization-metric">
+              <div class="sanitization-metric-label">
+                Removed due to ambiguous chemistry
+              </div>
+              <div class="sanitization-metric-value removed">
+                {{ summary.sanitization.ambiguous_chemical_row_count }}
+                <span class="fs-6 fw-normal text-muted"
+                  >row{% if summary.sanitization.ambiguous_chemical_row_count !=
+                  1 %}s{% endif %}</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="sanitization-metric">
+              <div class="sanitization-metric-label">
+                Active dataset after sanitization
+              </div>
+              <div class="sanitization-metric-value active">
+                {{ summary.rows }}
+                <span class="fs-6 fw-normal text-muted">rows</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sanitization-trace-note px-3 px-lg-4 py-2 small">
+        <i class="fas fa-link text-info me-2"></i>
+        <strong>Active dataset shape:</strong>
+        {{ summary.shape[0] }} × {{ summary.shape[1] }}.
+        {% if summary.source_row_number_preserved %}The original source
+        <code>{{ summary.row_number_columns | join(', ') }}</code> is retained
+        for traceability, while visible <code>NO</code> values use the
+        sanitized sequence.{% endif %}
+      </div>
     </div>
   </div>
   {% endif %}
@@ -273,10 +403,10 @@ block breadcrumb %}Dataset{% endblock %} {% block extra_css %}
       <div class="col-md-6 col-lg-3">
         <div class="card border-0 shadow-sm text-center h-100 py-2">
           <div class="card-body p-2 d-flex flex-column justify-content-between">
-            <div class="text-muted small fw-semibold">Jumlah Baris</div>
+            <div class="text-muted small fw-semibold">Baris Dataset Aktif</div>
             <div class="h3 fw-bold text-primary my-2">{{ summary.rows }}</div>
             <div class="text-muted small" style="font-size: 0.7rem">
-              Menampilkan jumlah baris data yang digunakan dalam penelitian.
+              Dihitung dengan panjang DataFrame aktif setelah sanitasi.
             </div>
           </div>
         </div>

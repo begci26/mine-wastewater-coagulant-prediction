@@ -347,32 +347,65 @@ def dataframe_has_forbidden_chemicals(df):
 
 def get_dataset_summary(file_path):
     try:
-        df = pd.read_csv(file_path)
+        active_df = pd.read_csv(file_path).reset_index(drop=True)
         row_number_columns = [
-            column for column in df.columns if is_row_number_column(column)
+            column for column in active_df.columns if is_row_number_column(column)
         ]
-        analytical_df = df.loc[:, get_research_columns(df)]
+        analytical_df = active_df.loc[:, get_research_columns(active_df)]
         preview_source_columns = [column for _, column in DATASET_PREVIEW_COLUMNS]
         missing_preview_columns = [
-            column for column in preview_source_columns if column not in df.columns
+            column for column in preview_source_columns if column not in active_df.columns
         ]
         if missing_preview_columns:
             raise ValueError(
                 "Kolom pratinjau tidak ditemukan: " + ", ".join(missing_preview_columns)
             )
 
-        preview_number_column = row_number_columns[0] if row_number_columns else None
-
         def preview_rows(frame):
             rows = frame.loc[:, preview_source_columns].replace({np.nan: None}).values.tolist()
-            numbers = (
-                frame[preview_number_column].replace({np.nan: None}).tolist()
-                if preview_number_column
-                else [int(index) + 1 for index in frame.index]
-            )
+            # The persisted No/Nomor column identifies the source row and can have
+            # gaps after sanitization. The Dataset page must show active-row
+            # sequence numbers so the final visible NO is always len(active_df).
+            numbers = [int(index) + 1 for index in frame.index]
             return [[number, *row] for number, row in zip(numbers, rows)]
 
-        shape = analytical_df.shape
+        active_shape = active_df.shape
+        analytical_shape = analytical_df.shape
+        active_row_count = int(len(active_df))
+        sanitization = load_sanitization_summary()
+        if sanitization:
+            stored_active_count = int(
+                sanitization.get("final_active_row_count", active_row_count)
+            )
+            removed_chemical = int(
+                sanitization.get("excluded_alum_lime_row_count", 0)
+            )
+            removed_ambiguous = int(
+                sanitization.get("ambiguous_chemical_row_count", 0)
+            )
+            raw_count = int(
+                sanitization.get(
+                    "original_row_count",
+                    active_row_count + removed_chemical + removed_ambiguous,
+                )
+            )
+            if stored_active_count != active_row_count:
+                raise ValueError(
+                    "Ringkasan sanitasi tidak konsisten dengan dataset aktif: "
+                    f"metadata={stored_active_count}, len(active_df)={active_row_count}."
+                )
+            if raw_count != active_row_count + removed_chemical + removed_ambiguous:
+                raise ValueError(
+                    "Ringkasan sanitasi tidak konsisten: baris sumber tidak sama "
+                    "dengan baris aktif ditambah seluruh baris yang dikeluarkan."
+                )
+            # Counts shown by the Dataset page derive the active count from the
+            # loaded active DataFrame, never from a source row identifier.
+            sanitization = {
+                **sanitization,
+                "final_active_row_count": active_row_count,
+            }
+
         size_bytes = os.path.getsize(file_path)
         file_size = (
             f"{size_bytes / (1024 * 1024):.2f} MB"
@@ -416,25 +449,24 @@ def get_dataset_summary(file_path):
             "success": True,
             "filename": os.path.basename(file_path),
             "filesize": file_size,
-            "rows": len(df),
-            "columns_count": shape[1],
+            "rows": active_row_count,
+            "shape": [active_row_count, int(active_shape[1])],
+            "columns_count": analytical_shape[1],
             "source_columns_count": int(
-                load_sanitization_summary().get("original_column_count", len(df.columns))
+                sanitization.get("original_column_count", len(active_df.columns))
             ),
             "numeric_vars_count": len(numeric_cols),
-            "categorical_vars_count": shape[1] - len(numeric_cols),
+            "categorical_vars_count": analytical_shape[1] - len(numeric_cols),
             "total_missing": int(analytical_df.isnull().sum().sum()),
-            "duplicate_count": int(df.duplicated().sum()),
+            "duplicate_count": int(active_df.duplicated().sum()),
             "row_number_columns": row_number_columns,
+            "source_row_number_preserved": bool(row_number_columns),
             "columns_info": columns_info,
             "stats": stats,
-            "preview_cols": [
-                preview_number_column.upper() if preview_number_column else "NO",
-                *[label for label, _ in DATASET_PREVIEW_COLUMNS],
-            ],
-            "head_data": preview_rows(df.head(10)),
-            "tail_data": preview_rows(df.tail(10)),
-            "sanitization": load_sanitization_summary(),
+            "preview_cols": ["NO", *[label for label, _ in DATASET_PREVIEW_COLUMNS]],
+            "head_data": preview_rows(active_df.head(10)),
+            "tail_data": preview_rows(active_df.tail(10)),
+            "sanitization": sanitization,
             "sanitization_report_available": bool(
                 get_source_dataset_path() and os.path.exists(get_source_dataset_path())
             ),

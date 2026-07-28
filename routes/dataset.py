@@ -5,17 +5,26 @@ from io import BytesIO
 from pathlib import Path
 from datetime import datetime
 import pandas as pd
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, send_file
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session,
+    send_file,
+)
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 from werkzeug.utils import secure_filename
 from config import Config
 from utils.logger import app_logger
 from utils.helpers import (
-    allowed_file, 
-    check_dataset_uploaded, 
-    get_dataset_path, 
-    delete_active_dataset, 
+    allowed_file,
+    check_dataset_uploaded,
+    get_dataset_path,
+    delete_active_dataset,
     get_dataset_summary,
     get_source_dataset_path,
     invalidate_generated_artifacts,
@@ -30,41 +39,43 @@ from utils.helpers import (
 )
 
 # Inisialisasi blueprint
-dataset_bp = Blueprint('dataset', __name__)
+dataset_bp = Blueprint("dataset", __name__)
 
-@dataset_bp.route('/')
+
+@dataset_bp.route("/")
 def index():
     """Merender halaman unggah dataset atau pratinjau data berdasarkan status unggahan."""
     is_uploaded = check_dataset_uploaded()
     summary = None
-    
+
     if is_uploaded:
         dataset_path = get_dataset_path()
         summary = get_dataset_summary(dataset_path)
-        if not summary.get('success'):
-            flash(f"Gagal memuat dataset: {summary.get('error')}", 'danger')
+        if not summary.get("success"):
+            flash(f"Gagal memuat dataset: {summary.get('error')}", "danger")
             is_uploaded = False
-            session['dataset_uploaded'] = False
+            session["dataset_uploaded"] = False
         else:
-            session['dataset_uploaded'] = True
+            session["dataset_uploaded"] = True
     else:
-        session['dataset_uploaded'] = False
-        
-    return render_template('dataset.html', is_uploaded=is_uploaded, summary=summary)
+        session["dataset_uploaded"] = False
 
-@dataset_bp.route('/upload', methods=['POST'])
+    return render_template("dataset.html", is_uploaded=is_uploaded, summary=summary)
+
+
+@dataset_bp.route("/upload", methods=["POST"])
 def upload():
     """Validate, select zero Alum/Lime observations, and activate a sanitized dataset."""
-    if 'dataset_file' not in request.files:
+    if "dataset_file" not in request.files:
         flash("Tidak ada bagian file dalam request.", "danger")
-        return redirect(url_for('dataset.index'))
-        
-    file = request.files['dataset_file']
-    
-    if file.filename == '':
+        return redirect(url_for("dataset.index"))
+
+    file = request.files["dataset_file"]
+
+    if file.filename == "":
         flash("Tidak ada file yang dipilih.", "danger")
-        return redirect(url_for('dataset.index'))
-        
+        return redirect(url_for("dataset.index"))
+
     if file and allowed_file(file.filename):
         temp_path = None
         try:
@@ -73,10 +84,16 @@ def upload():
             os.makedirs(temp_dir, exist_ok=True)
             temp_path = os.path.join(temp_dir, f"incoming.{extension}")
             file.save(temp_path)
-            df = pd.read_excel(temp_path, sheet_name=0) if extension == "xlsx" else pd.read_csv(temp_path)
+            df = (
+                pd.read_excel(temp_path, sheet_name=0)
+                if extension == "xlsx"
+                else pd.read_csv(temp_path)
+            )
             sanitized, sanitization = sanitize_dataframe(df)
             if sanitized.empty:
-                raise ValueError("Tidak ada observasi valid tanpa Alum dan Lime setelah sanitasi.")
+                raise ValueError(
+                    "Tidak ada observasi valid tanpa Alum dan Lime setelah sanitasi."
+                )
 
             archive_dir = os.path.join(Config.UPLOAD_FOLDER, "source_archive")
             os.makedirs(archive_dir, exist_ok=True)
@@ -100,17 +117,11 @@ def upload():
             )
             save_sanitization_summary(sanitization)
 
-            session['dataset_uploaded'] = True
-            session.pop('preprocessing_complete', None)
-            session.pop('preprocessing_results', None)
-            session.pop('training_complete', None)
-            session.pop('best_model_name', None)
-            session.pop('best_model_rmse', None)
-            session.pop('evaluation_complete', None)
-            session.pop('single_prediction_result', None)
-            session.pop('single_prediction_inputs', None)
-            session.pop('batch_prediction_result', None)
-            session.pop('prediction_history', None)
+            # A new upload starts a new workflow. Generated files were removed
+            # above; clear all cookie-backed workflow flags as well so no state
+            # from the previous dataset can be restored in this request.
+            session.clear()
+            session["dataset_uploaded"] = True
 
             app_logger.info("Dataset uploaded and sanitized: %s", sanitization)
             flash(
@@ -122,15 +133,20 @@ def upload():
                 "success",
             )
         except Exception as error:
-            app_logger.error(f"Kesalahan ketika mengunggah dataset: {error}", exc_info=True)
+            app_logger.error(
+                f"Kesalahan ketika mengunggah dataset: {error}", exc_info=True
+            )
             flash(f"Gagal mengunggah file: {str(error)}", "danger")
         finally:
             if temp_path and os.path.exists(temp_path):
                 os.remove(temp_path)
     else:
-        flash("Ekstensi file tidak valid. Hanya file .csv dan .xlsx yang didukung.", "danger")
-        
-    return redirect(url_for('dataset.index'))
+        flash(
+            "Ekstensi file tidak valid. Hanya file .csv dan .xlsx yang didukung.",
+            "danger",
+        )
+
+    return redirect(url_for("dataset.index"))
 
 
 def _validated_sanitization_report():
@@ -163,7 +179,7 @@ def _sanitization_download_name(extension):
     return f"laporan_sanitasi_{Path(original).stem}.{extension}"
 
 
-@dataset_bp.route('/sanitization-report/csv')
+@dataset_bp.route("/sanitization-report/csv")
 def download_sanitization_csv():
     try:
         report = _validated_sanitization_report()
@@ -182,7 +198,7 @@ def download_sanitization_csv():
         return redirect(url_for("dataset.index"))
 
 
-@dataset_bp.route('/sanitization-report/xlsx')
+@dataset_bp.route("/sanitization-report/xlsx")
 def download_sanitization_xlsx():
     try:
         report = _validated_sanitization_report()
@@ -195,7 +211,10 @@ def download_sanitization_xlsx():
             for cell in worksheet[1]:
                 cell.font = Font(bold=True)
             for index, column in enumerate(report.columns, start=1):
-                values = [str(column), *report[column].fillna("").astype(str).head(200).tolist()]
+                values = [
+                    str(column),
+                    *report[column].fillna("").astype(str).head(200).tolist(),
+                ]
                 worksheet.column_dimensions[get_column_letter(index)].width = min(
                     max(len(value) for value in values) + 2,
                     40,
@@ -210,24 +229,27 @@ def download_sanitization_xlsx():
             download_name=_sanitization_download_name("xlsx"),
         )
     except Exception as error:
-        app_logger.error("Gagal membuat laporan sanitasi XLSX: %s", error, exc_info=True)
+        app_logger.error(
+            "Gagal membuat laporan sanitasi XLSX: %s", error, exc_info=True
+        )
         flash(f"Gagal membuat laporan sanitasi XLSX: {error}", "danger")
         return redirect(url_for("dataset.index"))
 
-@dataset_bp.route('/reset', methods=['POST'])
+
+@dataset_bp.route("/reset", methods=["POST"])
 def reset():
     """Menghapus dataset aktif saat ini dan mereset status session terkait."""
     if delete_active_dataset():
         # Bersihkan semua status session
-        session.pop('dataset_uploaded', None)
-        session.pop('preprocessing_complete', None)
-        session.pop('training_complete', None)
-        session.pop('best_model_name', None)
-        session.pop('best_model_rmse', None)
-        session.pop('evaluation_complete', None)
-        
+        session.pop("dataset_uploaded", None)
+        session.pop("preprocessing_complete", None)
+        session.pop("training_complete", None)
+        session.pop("best_model_name", None)
+        session.pop("best_model_rmse", None)
+        session.pop("evaluation_complete", None)
+
         flash("Dataset berhasil dibersihkan.", "success")
     else:
         flash("Gagal menghapus dataset atau dataset tidak aktif.", "danger")
-        
-    return redirect(url_for('dataset.index'))
+
+    return redirect(url_for("dataset.index"))
